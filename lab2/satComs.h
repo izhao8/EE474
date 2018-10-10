@@ -75,4 +75,9 @@ void WarningAlarm();
 /* Generates random numbers for thruster command */
 int randomInteger(int low, int high);
 
+/* Helper function used in powerSubsystem to calculate
+the amount of power generate and consumed every time the
+powerSubsystem function is called*/
+void powerManage(powerSubsystemData* task, int i);
+
 #endif

@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "satComs.c"
 /*
 Ivan Zhao, Jason Garcia, Bogdan Tudos
 
@@ -10,6 +6,12 @@ a satellite communication system before uploading it
 onto Arduinos for communications. Random generator 
 given by our lord and savior professor Peckol.
 */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "satComs.c"
+
 
 /*
 	initialize ALL the variables for the structs as global
