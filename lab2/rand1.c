@@ -1,36 +1,26 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <limits.h>
 
-#include "satComs.h"
+int randomInteger(int low, int high);
 
 int seed = 1;
 
-void powerSubsystem(void* task) 
+void main(void)
 {
+	int i = 0;
+	int n = 0;
 
+	// Print hex digits one after another
+	for(i=0; i<20; i++)
+	{
+      	n = randomInteger(-10,10)%3;
+		printf("the number is: %d\n", n);
+	}
 }
 
-void thrusterSubsystem(void* task) 
-{
 
-}
-
-void satelliteComs(void* task) 
-{
-
-}
-
-void consoleDisplay(void* task) 
-{
-
-}
-
-void WarningAlarm(void* task) 
-{
-	
-}
-
-int randomInteger(int low, int high) 
+int randomInteger(int low, int high)
 {
 	double randNum = 0.0;
  	int multiplier = 2743;
@@ -58,3 +48,4 @@ int randomInteger(int low, int high)
 	
 	return retVal;
 }
+

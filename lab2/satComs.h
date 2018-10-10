@@ -3,18 +3,16 @@
 
 struct TCB {
 	void* taskData;
-	void (*myTask)(void);
-
 };
 typedef struct TCB TCB;
 
-struct powerSubsytemData {
+struct powerSubsystemData {
 	int* solarPanelState;
 	unsigned short* batLevel;
 	unsigned short* pwrCon;
 	unsigned short* pwrGen;
 };
-typedef struct powerSubsytemData powerSubsytemData;
+typedef struct powerSubsystemData powerSubsystemData;
 
 struct thrusterSubsystemData {
 	unsigned int* thusterCommand;
@@ -73,5 +71,8 @@ void consoleDisplay();
 
 /* Displays low fuel and battery */
 void WarningAlarm();
+
+/* Generates random numbers for thruster command */
+int randomInteger(int low, int high);
 
 #endif
