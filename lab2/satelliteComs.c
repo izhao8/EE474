@@ -3,6 +3,8 @@
 
 #include "satComs.c"
 /*
+Ivan Zhao, Jason Garcia, Bogdan Tudos
+
 This main function will be used to rapid prototype
 a satellite communication system before uploading it
 onto Arduinos for communications
