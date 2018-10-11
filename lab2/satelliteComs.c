@@ -25,8 +25,11 @@ unsigned short fuelLevel = 100;
 int fuelLow = 0; // FALSE = 0, TRUE = 1
 int batLow = 0; // FALSE = 0, TRUE = 1
 
-void main()
+void main(void)
 {
+	//comment the line below out if ur not compiling on windows
+	setvbuf(stdout, 0, _IONBF, 0); 
+
 	int i = 0;
 	int n = 0;
 
@@ -40,11 +43,16 @@ void main()
 	/*
 	initialize structs for all subsystems (task order tbd)
 	*/
-	powerSubsystemData* task0 = (powerSubsystemData*) malloc(sizeof(powerSubsystemData));
-	thrusterSubsystemData* task1 = (thrusterSubsystemData*) malloc(sizeof(thrusterSubsystemData));
-	satelliteComsData* task2 = (satelliteComsData*) malloc(sizeof(satelliteComsData));
-	consoleDisplayData* task3 = (consoleDisplayData*) malloc(sizeof(consoleDisplayData));
-	warningAlarmData* task4 = (warningAlarmData*) malloc(sizeof(warningAlarmData));
+	powerSubsystemData* task0 = (powerSubsystemData*) 
+		malloc(sizeof(powerSubsystemData));
+	thrusterSubsystemData* task1 = (thrusterSubsystemData*) 
+		malloc(sizeof(thrusterSubsystemData));
+	satelliteComsData* task2 = (satelliteComsData*) 
+		malloc(sizeof(satelliteComsData));
+	consoleDisplayData* task3 = (consoleDisplayData*) 
+		malloc(sizeof(consoleDisplayData));
+	warningAlarmData* task4 = (warningAlarmData*) 
+		malloc(sizeof(warningAlarmData));
 
 	/*
 	initialize struct for task control board (TCB)
@@ -62,7 +70,7 @@ void main()
 	task0->pwrGen = &pwrGen;
 
 	//thrusterSubsystemData variables
-	task1->thusterCommand = &thusterCommand;
+	task1->thrusterCommand = &thusterCommand;
 	task1->fuelLevel = & fuelLevel;
 
 	//satelliteComsData variables
@@ -73,7 +81,7 @@ void main()
 	task2->fuelLevel = &fuelLevel;
 	task2->pwrCon = &pwrCon;
 	task2->pwrGen = &pwrGen;
-	task2->thusterCommand = &thusterCommand;
+	task2->thrusterCommand = &thusterCommand;
 
 	//consoleDisplayData variables
 	task3->fuelLow = &fuelLow;

@@ -15,7 +15,7 @@ struct powerSubsystemData {
 typedef struct powerSubsystemData powerSubsystemData;
 
 struct thrusterSubsystemData {
-	unsigned int* thusterCommand;
+	unsigned int* thrusterCommand;
 	unsigned short* fuelLevel;
 };
 typedef struct thrusterSubsystemData thrusterSubsystemData;
@@ -28,7 +28,7 @@ struct satelliteComsData {
 	unsigned short* fuelLevel;
 	unsigned short* pwrCon;
 	unsigned short* pwrGen;
-	unsigned int* thusterCommand;
+	unsigned int* thrusterCommand;
 };
 typedef struct satelliteComsData satelliteComsData;
 
@@ -72,11 +72,11 @@ void consoleDisplay();
 /* Displays low fuel and battery */
 void WarningAlarm();
 
-/* Generates random numbers for thruster command */
+/* Generates random numbers for thrusterSubsystem */
 int randomInteger(int low, int high);
 
 /* Helper function used in powerSubsystem to calculate
-the amount of power generate and consumed every time the
+the amount of power generated and consumed every time the
 powerSubsystem function is called*/
 void powerManage(powerSubsystemData* task, int i);
 
