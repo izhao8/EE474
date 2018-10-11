@@ -6,12 +6,11 @@
 //Used in random function for thruster command
 int seed = 1;
 //Used in powerManage function 
-int count, consumptionState = 0;
+int globalCounter, consumptionState = 0;
 
-void powerSubsystem(void* task) 
-{
+void powerSubsystem(void* task) {
 	powerSubsystemData* task0 = (powerSubsystemData*) task;
-	count++;
+	
 
 	powerManage(task0, 1); //powerConsumption = 1
 
@@ -41,7 +40,7 @@ void powerManage(powerSubsystemData* task, int i) {
 		case 1: //powerConsumption
 			switch(consumptionState){
 				case 0: //Normal power consumption
-					if(count == 0 || count%2 == 0) {
+					if(globalCounter == 0 || globalCounter%2 == 0) {
 						*task->pwrCon += 2;
 					} else {
 						*task->pwrCon -= 1;
@@ -49,7 +48,7 @@ void powerManage(powerSubsystemData* task, int i) {
 					if(*task->pwrCon > 10);
 						consumptionState = 1;
 				case 1: //Reverse power consumption
-					if(count == 0 || count%2 == 0) {
+					if(globalCounter == 0 || globalCounter%2 == 0) {
 						*task->pwrCon -= 2;
 					} else {
 						*task->pwrCon += 1;
@@ -59,21 +58,20 @@ void powerManage(powerSubsystemData* task, int i) {
 			}
 		case 0: //powerGeneration
 			if(*task->batLevel < 50) {
-				if(count == 0 || count%2 == 0) {
+				if(globalCounter == 0 || globalCounter%2 == 0) {
 					*task->pwrGen += 2;
 				} else {
 					*task->pwrGen += 1;
 				}
 			} else if(*task->batLevel > 50 && *task->batLevel < 95) {
-				if(count == 0 || count%2 == 0);
+				if(globalCounter == 0 || globalCounter%2 == 0);
 					*task->pwrGen += 2;	
 			} 
 	}
 
 }
 
-void thrusterSubsystem(void* task) 
-{
+void thrusterSubsystem(void* task) {
 	thrusterSubsystemData* task1 = (thrusterSubsystemData*) task;
 	if(task1->thrusterCommand == NULL) {
 		return;
@@ -116,16 +114,15 @@ void thrusterSubsystem(void* task)
 	int thrustBool = left & right & up & down;
 	if(thrustBool) {
 		task1->fuelLevel -= 5;
-		fprintf("The thrusters are firing at %d\n", magBool);
-		fprintf("Time until done moving: %d sec\n", duration);
+		printf("The thrusters are firing at %d\n", magBool);
+		//printf("Time until done moving: %d sec\n", duration);
 	}
 
 	
 
 }
 
-void satelliteComs(void* task) 
-{
+void satelliteComs(void* task) {
 	satelliteComsData* task2 = (satelliteComsData*) task;
 	unsigned int command[16];
 	int rand = randomInteger(-10,10);
@@ -138,8 +135,7 @@ void satelliteComs(void* task)
 	task2->thrusterCommand = command;
 }
 
-void consoleDisplay(void* task) 
-{
+void consoleDisplay(void* task) {
 	//Normal satellite status
 	consoleDisplayData* task3 = (consoleDisplayData*) task;
 	printf("BATTERY LEVEL: \t%d\n", *task3->batLevel);
@@ -166,13 +162,12 @@ void consoleDisplay(void* task)
 	}
 }
 
-void WarningAlarm(void* task) 
-{
+void WarningAlarm(void* task) {
 	warningAlarmData* task4 = (warningAlarmData*) task;
 }
 
-int randomInteger(int low, int high) 
-{
+
+int randomInteger(int low, int high) {
 	double randNum = 0.0;
  	int multiplier = 2743;
 	int addOn = 5923;
