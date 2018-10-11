@@ -80,13 +80,7 @@ the amount of power generated and consumed every time the
 powerSubsystem function is called*/
 void powerManage(powerSubsystemData* task, int i);
 
-<<<<<<< HEAD
-/* Determines which subsystem and function should be 
-running and manages TCB pointer*/
-void schedule();
-=======
 // Time delay
 void delay(int numSeconds);
->>>>>>> 7f8bfa5eaef67a29d441be5b48ca92748edef2dc
 
 #endif
