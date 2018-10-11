@@ -80,4 +80,8 @@ the amount of power generated and consumed every time the
 powerSubsystem function is called*/
 void powerManage(powerSubsystemData* task, int i);
 
+/* Determines which subsystem and function should be 
+running and manages TCB pointer*/
+void schedule();
+
 #endif
