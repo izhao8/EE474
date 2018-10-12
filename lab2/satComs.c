@@ -47,6 +47,8 @@ void schedule(powerSubsystemData* task0,
 	controller->taskData = task4;
 	WarningAlarm(controller->taskData);
 	delay(0.5);
+
+	globalCounter++;
 }
 
 // Time Delay

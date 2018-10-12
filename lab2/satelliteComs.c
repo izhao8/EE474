@@ -30,8 +30,8 @@ void main(void)
 	//comment the line below out if ur not compiling on windows
 	setvbuf(stdout, 0, _IONBF, 0); 
 
-	int i = 0;
-	int n = 0;
+	/*int i = 0;
+	int n = 0;*/
 
 	// Print hex digits one after another
 	/*for(i=0; i<20; i++)
