@@ -80,6 +80,13 @@ the amount of power generated and consumed every time the
 powerSubsystem function is called*/
 void powerManage(powerSubsystemData* task, int i);
 
+void schedule(powerSubsystemData* task0,
+				thrusterSubsystemData* task1,
+				satelliteComsData* task2,
+				consoleDisplayData* task3, 
+				warningAlarmData* task4,
+				TCB* controller);
+
 // Time delay
 void delay(int numSeconds);
 

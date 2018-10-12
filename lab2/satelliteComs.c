@@ -99,4 +99,8 @@ void main(void)
 	task4->batLevel = &batLevel;
 	task4->fuelLevel = &fuelLevel;
 
+	for(int i = 0; i < 32; i++) {
+		schedule(task0, task1, task2, task3, task4, controller);
+		delay(5);
+	}
 }

@@ -10,6 +10,45 @@ int seed = 1;
 //Used in powerManage function
 int globalCounter, consumptionState = 0;
 
+void schedule(powerSubsystemData* task0,
+				thrusterSubsystemData* task1,
+				satelliteComsData* task2,
+				consoleDisplayData* task3, 
+				warningAlarmData* task4,
+				TCB* controller) {
+	//Task Queue
+
+	//power system
+	controller->taskData = task0;
+	powerSubsystem(controller->taskData);
+	delay(0.5);
+	controller->taskData = task3;
+	consoleDisplay(controller->taskData);
+	controller->taskData = task4;
+	WarningAlarm(controller->taskData);
+	delay(0.5);
+
+	//thruster system
+	controller->taskData = task1;
+	powerSubsystem(controller->taskData);
+	delay(0.5);
+	controller->taskData = task3;
+	consoleDisplay(controller->taskData);
+	controller->taskData = task4;
+	WarningAlarm(controller->taskData);
+	delay(0.5);
+
+	//sattelite coms
+	controller->taskData = task2;
+	powerSubsystem(controller->taskData);
+	delay(0.5);
+	controller->taskData = task3;
+	consoleDisplay(controller->taskData);
+	controller->taskData = task4;
+	WarningAlarm(controller->taskData);
+	delay(0.5);
+}
+
 // Time Delay
 void delay(int numSeconds)
 {
@@ -17,8 +56,7 @@ void delay(int numSeconds)
 	clock_t start_time = clock();
 
 	// looping while required time is not acheived
-	while (clock() < start_time + (numSeconds * CLOCKS_PER_SEC))
-		;
+	while (clock() < start_time + (numSeconds * CLOCKS_PER_SEC));
 }
 
 void powerSubsystem(void *task)
