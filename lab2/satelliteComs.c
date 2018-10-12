@@ -34,11 +34,11 @@ void main(void)
 	int n = 0;
 
 	// Print hex digits one after another
-	for(i=0; i<20; i++)
+	/*for(i=0; i<20; i++)
 	{
       	n = randomInteger(-10,10)%3;
 		printf("the number is: %d\n", n);
-	}
+	}*/
 
 	/*
 	initialize structs for all subsystems (task order tbd)

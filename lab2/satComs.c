@@ -239,7 +239,7 @@ void consoleDisplay(void *task)
 	printf("POWER CONSUMPTION: \t%d\n", *task3->pwrCon);
 	printf("POWER GENERATION: \t%d\n", *task3->pwrGen);
 	printf("CHARGING STATUS: \t");
-	if (task3->solarPanelState)
+	if (*task3->solarPanelState)
 	{
 		printf("ON\n");
 	}
