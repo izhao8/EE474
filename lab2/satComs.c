@@ -153,85 +153,88 @@ void powerManage(void *task0, int i)
 void thrusterSubsystem(void *task)
 {
 	thrusterSubsystemData *task1 = (thrusterSubsystemData *)task;
+	unsigned int* command = convertDtoB(*task1->thrusterCommand);
 
-	unsigned short left = (unsigned short) task1->thrusterCommand[0];
-	unsigned short right = (unsigned short) task1->thrusterCommand[1];
-	unsigned short up = (unsigned short) task1->thrusterCommand[2];
-	unsigned short down = (unsigned short) task1->thrusterCommand[3];
-
+	unsigned short left = (unsigned short) command[0];
+	unsigned short right = (unsigned short) command[1];
+	unsigned short up = (unsigned short) command[2];
+	unsigned short down = (unsigned short) command[3];
+	int direction = left | right | up | down;
 	//questionable if we even need to use magnitude and variable
 	unsigned int magnitude[4] = {
-		task1->thrusterCommand[4],
-		task1->thrusterCommand[5],
-		task1->thrusterCommand[6],
-		task1->thrusterCommand[7]};
+		command[4],
+		command[5],
+		command[6],
+		command[7]};
 
-	int magBool;
-	if ((magnitude[0] & magnitude[1]) == (magnitude[2] & magnitude[3]))
-	{
-		if ((magnitude[0] & magnitude[1]) == 1)
-		{
-			magBool = 100;
-		}
-		else
-		{
-			magBool = 0;
-		}
-	}
-	else
-	{
-		magBool = 50;
-	}
+	unsigned int magBool = convertBtoD(magnitude, 4);
+	unsigned int mag = 0;
 
 	unsigned int duration[8] = {
-		task1->thrusterCommand[8],
-		task1->thrusterCommand[9],
-		task1->thrusterCommand[10],
-		task1->thrusterCommand[11],
-		task1->thrusterCommand[12],
-		task1->thrusterCommand[13],
-		task1->thrusterCommand[14],
-		task1->thrusterCommand[15]};
+		command[8],
+		command[9],
+		command[10],
+		command[11],
+		command[12],
+		command[13],
+		command[14],
+		command[15]};
+	unsigned int sum = convertBtoD(duration, 8);
 
-	int sum = 0;
-	for (int i = 0; i < 8; i++)
-	{
-		int binary = duration[i];
-		sum += ((int)pow(2, i)) * binary;
-	}
-
-	//printf("%d\n", sum); // Decimal value of the thurster duration
-
-	//Decreases fuel level is thrusters are being used
-	int thrustBool = left & right & up & down;
-	if (thrustBool)
-	{
-		task1->fuelLevel -= 5;
-		printf("The thrusters are firing at %d\n", magBool);
-		//printf("Time until done moving: %d sec\n", duration);
-	}
+	if(direction && sum > 0) {
+			if(magBool == 14) {
+				mag = 100;
+				*task1->fuelLevel -= 10;
+			} else if(magBool == 0) {
+				mag = 0;
+			} else {
+				mag = 50;
+				*task1->fuelLevel -= 5;	
+			}
+		} else {
+			mag = 0;
+		}
+	
+	printf("DURATION: \t%u ms\n", sum);
+	printf("THRUSTERS: \t%d\n", mag);
 }
 
 void satelliteComs(void *task)
 {
 	satelliteComsData *task2 = (satelliteComsData *)task;
-	unsigned int command[16];
-	int rand = randomInteger(-10, 10);
+	*task2->thrusterCommand = (unsigned int) randomInteger(-10, 10);
+}
 
-	//converts decimal into binary array
+unsigned int* convertDtoB(int dec) {
+	unsigned int* command = malloc(sizeof(int) * 100);
+
 	for (int i = 15; i >= 0; i--)
-	{
-		command[i] = (rand >> i) & 1;
+		{
+			command[i] = (dec >> i) & 1;
+		}
+	return command;
+}
+
+unsigned int convertBtoD(unsigned int* bits, int length) {
+	unsigned int sum;
+	for (int i = 0; i < length; i++){
+			int binary = bits[i];
+			sum += ((int)pow(2, i)) * binary;
 	}
 
-	task2->thrusterCommand = command;
+	return sum;
 }
 
 void consoleDisplay(void *task)
 {
 	//Normal satellite status
 	consoleDisplayData *task3 = (consoleDisplayData *)task;
-	printf("BATTERY LEVEL: \t%d\n", *task3->batLevel);
+	printf("BATTERY LEVEL: \t");
+	if(*task3->batLevel > 100 || *task3->batLevel < 0) {
+		printf("0\n");
+	} else {
+		printf("%d\n", *task3->batLevel);
+	}
 	printf("FUEL LEVEL: \t%d\n", *task3->fuelLevel);
 	printf("POWER CONSUMPTION: \t%d\n", *task3->pwrCon);
 	printf("POWER GENERATION: \t%d\n", *task3->pwrGen);

@@ -90,4 +90,7 @@ void schedule(powerSubsystemData* task0,
 // Time delay
 void delay(int numSeconds);
 
+unsigned int* convertDtoB(int dec);
+unsigned int convertBtoD(unsigned int* bits, int length);
+
 #endif

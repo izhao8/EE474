@@ -25,7 +25,7 @@ void main(void)
 	unsigned short batLevel = 100;
 	unsigned short pwrCon = 0;
 	unsigned short pwrGen = 0;
-	unsigned int thusterCommand[16] = {0};
+	unsigned int thusterCommand = 0;
 	unsigned short fuelLevel = 100;
 	int fuelLow = 0; // FALSE = 0, TRUE = 1
 	int batLow = 0; // FALSE = 0, TRUE = 1
@@ -60,7 +60,7 @@ void main(void)
 	task0->pwrGen = &pwrGen;
 
 	//thrusterSubsystemData variables
-	task1->thrusterCommand = thusterCommand;
+	task1->thrusterCommand = &thusterCommand;
 	task1->fuelLevel = & fuelLevel;
 
 	//satelliteComsData variables
@@ -71,7 +71,7 @@ void main(void)
 	task2->fuelLevel = &fuelLevel;
 	task2->pwrCon = &pwrCon;
 	task2->pwrGen = &pwrGen;
-	task2->thrusterCommand = thusterCommand;
+	task2->thrusterCommand = &thusterCommand;
 
 	//consoleDisplayData variables
 	task3->fuelLow = &fuelLow;
