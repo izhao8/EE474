@@ -78,7 +78,7 @@ int randomInteger(int low, int high);
 /* Helper function used in powerSubsystem to calculate
 the amount of power generated and consumed every time the
 powerSubsystem function is called*/
-void powerManage(powerSubsystemData* task, int i);
+void powerManage(void *task0, int i);
 
 void schedule(powerSubsystemData* task0,
 				thrusterSubsystemData* task1,

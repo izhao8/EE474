@@ -13,32 +13,22 @@ given by our lord and savior professor Peckol.
 #include "satComs.c"
 
 
-/*
-	initialize ALL the variables for the structs as global
-*/
-int solarPanelState = 0; // FALSE = 0, TRUE = 1
-unsigned short batLevel = 100;
-unsigned short pwrCon = 0;
-unsigned short pwrGen = 0;
-unsigned int thusterCommand = 0;
-unsigned short fuelLevel = 100;
-int fuelLow = 0; // FALSE = 0, TRUE = 1
-int batLow = 0; // FALSE = 0, TRUE = 1
-
 void main(void)
 {
 	//comment the line below out if ur not compiling on windows
 	setvbuf(stdout, 0, _IONBF, 0); 
 
-	/*int i = 0;
-	int n = 0;*/
-
-	// Print hex digits one after another
-	/*for(i=0; i<20; i++)
-	{
-      	n = randomInteger(-10,10)%3;
-		printf("the number is: %d\n", n);
-	}*/
+	/*
+	initialize ALL the variables for the structs as global
+	*/
+	int solarPanelState = 0; // FALSE = 0, TRUE = 1
+	unsigned short batLevel = 100;
+	unsigned short pwrCon = 0;
+	unsigned short pwrGen = 0;
+	unsigned int thusterCommand[16] = {0};
+	unsigned short fuelLevel = 100;
+	int fuelLow = 0; // FALSE = 0, TRUE = 1
+	int batLow = 0; // FALSE = 0, TRUE = 1
 
 	/*
 	initialize structs for all subsystems (task order tbd)
@@ -70,7 +60,7 @@ void main(void)
 	task0->pwrGen = &pwrGen;
 
 	//thrusterSubsystemData variables
-	task1->thrusterCommand = &thusterCommand;
+	task1->thrusterCommand = thusterCommand;
 	task1->fuelLevel = & fuelLevel;
 
 	//satelliteComsData variables
@@ -81,7 +71,7 @@ void main(void)
 	task2->fuelLevel = &fuelLevel;
 	task2->pwrCon = &pwrCon;
 	task2->pwrGen = &pwrGen;
-	task2->thrusterCommand = &thusterCommand;
+	task2->thrusterCommand = thusterCommand;
 
 	//consoleDisplayData variables
 	task3->fuelLow = &fuelLow;
@@ -101,6 +91,6 @@ void main(void)
 
 	for(int i = 0; i < 32; i++) {
 		schedule(task0, task1, task2, task3, task4, controller);
-		delay(5);
+		delay(1);
 	}
 }

@@ -19,34 +19,26 @@ void schedule(powerSubsystemData* task0,
 	//Task Queue
 
 	//power system
-	controller->taskData = task0;
+	controller->taskData = (void*) task0;
 	powerSubsystem(controller->taskData);
-	delay(0.5);
-	controller->taskData = task3;
-	consoleDisplay(controller->taskData);
-	controller->taskData = task4;
-	WarningAlarm(controller->taskData);
-	delay(0.5);
+	delay(1);
 
 	//thruster system
-	controller->taskData = task1;
-	powerSubsystem(controller->taskData);
-	delay(0.5);
-	controller->taskData = task3;
-	consoleDisplay(controller->taskData);
-	controller->taskData = task4;
-	WarningAlarm(controller->taskData);
-	delay(0.5);
+	controller->taskData = (void*) task1;
+	thrusterSubsystem(controller->taskData);
+	delay(1);
 
 	//sattelite coms
-	controller->taskData = task2;
-	powerSubsystem(controller->taskData);
-	delay(0.5);
-	controller->taskData = task3;
+	controller->taskData = (void*) task2;
+	satelliteComs(controller->taskData);
+	delay(1);
+
+	//consoleDisplay
+	controller->taskData = (void*) task3;
 	consoleDisplay(controller->taskData);
-	controller->taskData = task4;
+	controller->taskData = (void*) task4;
 	WarningAlarm(controller->taskData);
-	delay(0.5);
+	delay(1);
 
 	globalCounter++;
 }
@@ -65,7 +57,7 @@ void powerSubsystem(void *task)
 {
 	powerSubsystemData *task0 = (powerSubsystemData *)task;
 
-	powerManage(task0, 1); //powerConsumption = 1
+	powerManage((void*) task0, 1); //powerConsumption = 1
 
 	//powerGeneration and solarPanelState
 	if (*task0->solarPanelState == 1)
@@ -76,7 +68,7 @@ void powerSubsystem(void *task)
 		}
 		else
 		{
-			powerManage(task0, 0); //powerGeneration = 0
+			powerManage((void*) task0, 0); //powerGeneration = 0
 		}
 	}
 	else
@@ -98,38 +90,44 @@ void powerSubsystem(void *task)
 	}
 }
 
-void powerManage(powerSubsystemData *task, int i)
+void powerManage(void *task0, int i)
 {
+	powerSubsystemData *task = (powerSubsystemData*) task0;
 	switch (i)
 	{
 	case 1: //powerConsumption
 		switch (consumptionState)
 		{
-		case 0: //Normal power consumption
-			if (globalCounter == 0 || globalCounter % 2 == 0)
-			{
-				*task->pwrCon += 2;
-			}
-			else
-			{
-				*task->pwrCon -= 1;
-			}
-			if (*task->pwrCon > 10)
-				;
-			consumptionState = 1;
+		
 		case 1: //Reverse power consumption
 			if (globalCounter == 0 || globalCounter % 2 == 0)
 			{
-				*task->pwrCon -= 2;
+				*task->pwrCon = *task->pwrCon - 2;
 			}
 			else
 			{
-				*task->pwrCon += 1;
+				*task->pwrCon = *task->pwrCon + 1;
 			}
-			if (*task->pwrCon < 5)
-				;
-			consumptionState = 0;
+			if (*task->pwrCon < 5) {
+				consumptionState = 0;
+			}
+			break;
+		case 0: //Normal power consumption
+			if (globalCounter == 0 || globalCounter % 2 == 0)
+			{
+				*task->pwrCon = *task->pwrCon + 2;
+			}
+			else
+			{
+				*task->pwrCon = *task->pwrCon - 1;
+			}
+			if (*task->pwrCon > 10)
+			{
+				consumptionState = 1;
+			}
+			break;
 		}
+		break;
 	case 0: //powerGeneration
 		if (*task->batLevel < 50)
 		{
@@ -148,21 +146,18 @@ void powerManage(powerSubsystemData *task, int i)
 				;
 			*task->pwrGen += 2;
 		}
+		break;
 	}
 }
 
 void thrusterSubsystem(void *task)
 {
 	thrusterSubsystemData *task1 = (thrusterSubsystemData *)task;
-	if (task1->thrusterCommand == NULL)
-	{
-		return;
-	}
 
-	unsigned short left = (unsigned short)task1->thrusterCommand[0];
-	unsigned short right = (unsigned short)task1->thrusterCommand[1];
-	unsigned short up = (unsigned short)task1->thrusterCommand[2];
-	unsigned short down = (unsigned short)task1->thrusterCommand[3];
+	unsigned short left = (unsigned short) task1->thrusterCommand[0];
+	unsigned short right = (unsigned short) task1->thrusterCommand[1];
+	unsigned short up = (unsigned short) task1->thrusterCommand[2];
+	unsigned short down = (unsigned short) task1->thrusterCommand[3];
 
 	//questionable if we even need to use magnitude and variable
 	unsigned int magnitude[4] = {
@@ -205,7 +200,7 @@ void thrusterSubsystem(void *task)
 		sum += ((int)pow(2, i)) * binary;
 	}
 
-	printf("%d\n", sum); // Decimal value of the thurster duration
+	//printf("%d\n", sum); // Decimal value of the thurster duration
 
 	//Decreases fuel level is thrusters are being used
 	int thrustBool = left & right & up & down;
@@ -247,7 +242,7 @@ void consoleDisplay(void *task)
 	}
 	else
 	{
-		printf("OFF\n");
+		printf("OFF\n\n");
 	}
 
 	//Annunciation mode
@@ -279,7 +274,7 @@ int randomInteger(int low, int high)
 	double randNum = 0.0;
 	int multiplier = 2743;
 	int addOn = 5923;
-	double max = INT_MAX + 1.0;
+	double max = 214783647 + 1.0;
 
 	int retVal = 0;
 
