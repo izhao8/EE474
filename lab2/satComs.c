@@ -62,9 +62,10 @@ void powerSubsystem(void *task)
 	//powerGeneration and solarPanelState
 	if (*task0->solarPanelState == 1)
 	{
-		if (*task0->batLevel > 95)
+		if ((int)*task0->batLevel > 95)
 		{
 			*task0->solarPanelState = 0;
+			*task0->pwrGen = 0;
 		}
 		else
 		{
@@ -73,20 +74,27 @@ void powerSubsystem(void *task)
 	}
 	else
 	{
-		if (*task0->batLevel <= 10)
+		if ((int)*task0->batLevel <= 10)
 		{
 			*task0->solarPanelState = 1;
 		}
 	}
 
 	//computes battery level
-	if (*task0->solarPanelState == 0)
-	{
-		*task0->batLevel -= (3 * (*task0->pwrCon));
-	}
-	else
-	{
-		*task0->batLevel -= (*task0->pwrCon + *task0->pwrGen);
+	if (*task0->solarPanelState == 0) {
+		if((int)(*task0->batLevel - (3 * (*task0->pwrCon))) < 0) {
+			*task0->batLevel = 0;
+		} else {
+			*task0->batLevel -= (3 * (*task0->pwrCon));
+		}
+			
+	} else {
+		if((int)(*task0->batLevel - *task0->pwrCon + *task0->pwrGen) < 0) {
+			*task0->batLevel = 0;
+		} else {
+			*task0->batLevel = *task0->batLevel - *task0->pwrCon + *task0->pwrGen;
+		}
+		
 	}
 }
 
@@ -142,9 +150,8 @@ void powerManage(void *task0, int i)
 		}
 		else if (*task->batLevel > 50 && *task->batLevel < 95)
 		{
-			if (globalCounter == 0 || globalCounter % 2 == 0)
-				;
-			*task->pwrGen += 2;
+			if (globalCounter == 0 || globalCounter % 2 == 0);
+				*task->pwrGen += 2;
 		}
 		break;
 	}
@@ -181,15 +188,23 @@ void thrusterSubsystem(void *task)
 		command[15]};
 	unsigned int sum = convertBtoD(duration, 8);
 
-	if(direction && sum > 0) {
+	if(direction && sum > 0 && (int) *task1->fuelLevel > 0) {
 			if(magBool == 14) {
 				mag = 100;
-				*task1->fuelLevel -= 10;
+				if((int)*task1->fuelLevel - 10 < 0) {
+					*task1->fuelLevel = 0;
+				} else {
+					*task1->fuelLevel -= 10;
+				}
 			} else if(magBool == 0) {
 				mag = 0;
 			} else {
 				mag = 50;
-				*task1->fuelLevel -= 5;	
+				if((int)*task1->fuelLevel - 5 < 0) {
+					*task1->fuelLevel = 0;
+				} else {
+					*task1->fuelLevel -= 5;
+				}
 			}
 		} else {
 			mag = 0;
@@ -241,7 +256,7 @@ void consoleDisplay(void *task)
 	printf("CHARGING STATUS: \t");
 	if (*task3->solarPanelState)
 	{
-		printf("ON\n");
+		printf("ON\n\n");
 	}
 	else
 	{
