@@ -29,7 +29,7 @@ struct satelliteComsData {
 	int* fuelLow;
 	int* batLow;
 	int* solarPanelState;
-	unsigned short* batLevel;
+	unsigned int* batLevel;
 	unsigned short* fuelLevel;
 	unsigned short* pwrCon;
 	unsigned short* pwrGen;
@@ -41,7 +41,7 @@ struct consoleDisplayData {
 	int* fuelLow;
 	int* batLow;
 	int* solarPanelState;
-	unsigned short* batLevel;
+	unsigned int* batLevel;
 	unsigned short* fuelLevel;
 	unsigned short* pwrCon;
 	unsigned short* pwrGen;
@@ -52,7 +52,7 @@ struct warningAlarmData {
 	int* fuelLow;
 	int* batLow;
 	int* solarPanelState;
-	unsigned short* batLevel;
+	unsigned int* batLevel;
 	unsigned short* fuelLevel;
 };
 typedef struct warningAlarmData warningAlarmData;

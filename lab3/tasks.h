@@ -17,7 +17,7 @@ unsigned int convertBtoD(unsigned int* bits, int length);
 unsigned int* convertDtoB(int dec);
 int randomInteger(int low, int high);
 void insert(TCB* node);
-int batteryBuffer();
+double batteryBuffer(int battery);
 
 void powerSubsystem(void *task)
 {
@@ -244,6 +244,8 @@ void insert(TCB* node) {
 	return;
 }
 
-int batteryBuffer() {
-	return 0;
+double batteryBuffer(int battery) {
+	double newBat = battery/1024;
+	newBat = 36 * newBat;
+	return newBat;
 }

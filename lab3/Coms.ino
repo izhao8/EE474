@@ -30,11 +30,12 @@ void thrusterSubsystem(void *task);
 void scheduler();
 
 int fuelcount, batcount = 0;
+int batteryRead = analogRead(13);
   /*
   initialize ALL the variables for the structs as global
   */
   int solarPanelState = 0; // FALSE = 0, TRUE = 1
-  unsigned int batLevel = analogRead(13);
+  unsigned int* batLevel = &batteryRead;
   unsigned short pwrCon = 0;
   unsigned short pwrGen = 0;
   unsigned int thusterCommand = 0;
@@ -76,7 +77,7 @@ void setup() {
 
   //powerSusbsystemData variables
   task0->solarPanelState = &solarPanelState;
-  task0->batLevel = &batLevel;
+  task0->batLevel = batLevel;
   task0->pwrCon = &pwrCon;
   task0->pwrGen = &pwrGen;
   power->taskData = &task0;
@@ -92,7 +93,7 @@ void setup() {
   task2->fuelLow = &fuelLow;
   task2->batLow = &batLow;
   task2->solarPanelState = &solarPanelState;
-  task2->batLevel = &batLevel;
+  task2->batLevel = batLevel;
   task2->fuelLevel = &fuelLevel;
   task2->pwrCon = &pwrCon;
   task2->pwrGen = &pwrGen;
@@ -104,7 +105,7 @@ void setup() {
   task3->fuelLow = &fuelLow;
   task3->batLow = &batLow;
   task3->solarPanelState = &solarPanelState;
-  task3->batLevel = &batLevel;
+  task3->batLevel = batLevel;
   task3->fuelLevel = &fuelLevel;
   task3->pwrCon = &pwrCon;
   task3->pwrGen = &pwrGen;
@@ -115,7 +116,7 @@ void setup() {
   task4->fuelLow = &fuelLow;
   task4->batLow = &batLow;
   task4->solarPanelState = &solarPanelState;
-  task4->batLevel = &batLevel;
+  task4->batLevel = batLevel;
   task4->fuelLevel = &fuelLevel;
   warning->taskData = &task4;
   warning->myTask = &WarningAlarm;
