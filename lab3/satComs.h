@@ -11,7 +11,9 @@ typedef struct TCB TCB;
 
 struct powerSubsystemData {
 	int* solarPanelState;
-	unsigned short* batLevel;
+	int* deploy;
+	int* retract;
+	unsigned int* batLevel;
 	unsigned short* pwrCon;
 	unsigned short* pwrGen;
 };
@@ -52,9 +54,28 @@ struct warningAlarmData {
 	int* solarPanelState;
 	unsigned short* batLevel;
 	unsigned short* fuelLevel;
-	void (*task)(void*);
 };
 typedef struct warningAlarmData warningAlarmData;
 
+struct miningCommunications {
+	char* command;
+	char* response;
+};
+typedef struct miningCommunications miningCommunications;
+
+struct consoleKeypadData {
+	int* motorSpeedInc;
+	int* motorSpeedDec;
+};
+typedef struct consoleKeypadData consoleKeypadData;
+
+struct solarPanelControlData {
+	int* solarPanelState;
+	int* deploy;
+	int* retract;
+	int* motorSpeedInc;
+	int* motorSpeedDec;
+};
+typedef struct solarPanelControlData solarPanelControlData;
 
 #endif

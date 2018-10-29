@@ -9,10 +9,15 @@
 int seed = 1;
 //Used in powerManage function
 int globalCounter, consumptionState = 0;
+TCB* head = (TCB*)malloc(sizeof(TCB));
+TCB* tail = (TCB*)malloc(sizeof(TCB));
+
 void powerManage(void *task0, int i);
 unsigned int convertBtoD(unsigned int* bits, int length);
 unsigned int* convertDtoB(int dec);
 int randomInteger(int low, int high);
+void insert(TCB* node);
+int batteryBuffer();
 
 void powerSubsystem(void *task)
 {
@@ -225,4 +230,20 @@ int randomInteger(int low, int high)
 	}
 
 	return retVal;
+}
+
+void insert(TCB* node) {
+	if (node == NULL) {
+		head = node;
+		tail = node;
+	} else {
+		tail->next = node;
+		node->prev = tail;
+		tail = node;
+	}
+	return;
+}
+
+int batteryBuffer() {
+	return 0;
 }

@@ -34,13 +34,19 @@ int fuelcount, batcount = 0;
   initialize ALL the variables for the structs as global
   */
   int solarPanelState = 0; // FALSE = 0, TRUE = 1
-  unsigned short batLevel = 100;
+  unsigned int batLevel = analogRead(13);
   unsigned short pwrCon = 0;
   unsigned short pwrGen = 0;
   unsigned int thusterCommand = 0;
   unsigned short fuelLevel = 100;
   int fuelLow = 0; // FALSE = 0, TRUE = 1
   int batLow = 0; // FALSE = 0, TRUE = 1
+  char command = NULL;
+  char response = NULL;
+  int deploy = 0;
+  int retract = 0;
+  int motorSpeedInc = 0;
+  int motorSpeedDec = 0;
   /*
   initialize structs for all subsystems (task order tbd)
   */
@@ -56,7 +62,7 @@ int fuelcount, batcount = 0;
     malloc(sizeof(warningAlarmData));
 
   /*
-  initialize struct for task control board (TCB)
+  initialize structs for task control board (TCB)
   */
   TCB* power = (TCB*)malloc(sizeof(TCB));
   TCB* thruster = (TCB*)malloc(sizeof(TCB));
@@ -167,38 +173,6 @@ void setup() {
 }
 
 void loop() {
-
-  //power system
-/*  controller->taskData = (void*) task0;
-  powerSubsystem(controller->taskData);
-  controller->taskData = (void*) task4;
-  WarningAlarm(controller->taskData);
-  delay(1000);
-
-  //thruster system
-  controller->taskData = (void*) task1;
-  thrusterSubsystem(controller->taskData);
-  controller->taskData = (void*) task4;
-  WarningAlarm(controller->taskData);
-  delay(1000);
-
-  //sattelite coms
-  controller->taskData = (void*) task2;
-  satelliteComs(controller->taskData);
-  controller->taskData = (void*) task4;
-  WarningAlarm(controller->taskData);
-  delay(1000);
-
-  //consoleDisplay
-  controller->taskData = (void*) task3;
-  consoleDisplay(controller->taskData);
-  controller->taskData = (void*) task4;
-  WarningAlarm(controller->taskData);
-  delay(1000);
-
-  controller->taskData = (void*) task4;
-  WarningAlarm(controller->taskData); 
-  delay(1000);*/
   scheduler();
   globalCounter++;
 }
