@@ -24,10 +24,10 @@ extern "C" {
 #define WHITE   0xFFFF
 #define ORANGE  0xFC00
 
-Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
+//Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 void WarningAlarm(void *task);
 void thrusterSubsystem(void *task);
-void scheduler(void* task);
+void scheduler();
 
 int fuelcount, batcount = 0;
   /*
@@ -58,20 +58,29 @@ int fuelcount, batcount = 0;
   /*
   initialize struct for task control board (TCB)
   */
-  TCB* controller = (TCB*) malloc(sizeof(TCB));
+  TCB* power = (TCB*)malloc(sizeof(TCB));
+  TCB* thruster = (TCB*)malloc(sizeof(TCB));
+  TCB* satellite = (TCB*)malloc(sizeof(TCB));
+  TCB* console = (TCB*)malloc(sizeof(TCB));
+  TCB* warning = (TCB*)malloc(sizeof(TCB));
+  TCB* queue[5] = {power, thruster, satellite, console, warning};
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+
+  //powerSusbsystemData variables
   task0->solarPanelState = &solarPanelState;
   task0->batLevel = &batLevel;
   task0->pwrCon = &pwrCon;
   task0->pwrGen = &pwrGen;
-  task0->task = &powerSubsystem;
+  power->taskData = &task0;
+  power->myTask = &powerSubsystem;
 
   //thrusterSubsystemData variables
   task1->thrusterCommand = &thusterCommand;
   task1->fuelLevel = & fuelLevel;
-  task1->task = &thrusterSubsystem;
+  thruster->taskData = &task1;
+  thruster->myTask = &thrusterSubsystem;
 
   //satelliteComsData variables
   task2->fuelLow = &fuelLow;
@@ -82,7 +91,8 @@ void setup() {
   task2->pwrCon = &pwrCon;
   task2->pwrGen = &pwrGen;
   task2->thrusterCommand = &thusterCommand;
-  task2->task = &satelliteComs;
+  satellite->taskData = &task2;
+  satellite->myTask = &satelliteComs;
 
   //consoleDisplayData variables
   task3->fuelLow = &fuelLow;
@@ -92,7 +102,8 @@ void setup() {
   task3->fuelLevel = &fuelLevel;
   task3->pwrCon = &pwrCon;
   task3->pwrGen = &pwrGen;
-  task3->task = &consoleDisplay;
+  console->taskData = &task3;
+  console->myTask = &consoleDisplay;
 
   //warningAlarmData variables
   task4->fuelLow = &fuelLow;
@@ -100,72 +111,65 @@ void setup() {
   task4->solarPanelState = &solarPanelState;
   task4->batLevel = &batLevel;
   task4->fuelLevel = &fuelLevel;
-  task4->task = &WarningAlarm;
+  warning->taskData = &task4;
+  warning->myTask = &WarningAlarm;
 
-  Serial.println(F("TFT LCD test"));
+//  Serial.println(F("TFT LCD test"));
+//
+//
+//#ifdef USE_Elegoo_SHIELD_PINOUT
+//  Serial.println(F("Using Elegoo 2.4\" TFT Arduino Shield Pinout"));
+//#else
+//  Serial.println(F("Using Elegoo 2.4\" TFT Breakout Board Pinout"));
+//#endif
+//
+//  Serial.print("TFT size is "); Serial.print(tft.width()); Serial.print("x"); Serial.println(tft.height());
+//
+//  tft.reset();
+//
+//   uint16_t identifier = tft.readID();
+//   if(identifier == 0x9325) {
+//    Serial.println(F("Found ILI9325 LCD driver"));
+//  } else if(identifier == 0x9328) {
+//    Serial.println(F("Found ILI9328 LCD driver"));
+//  } else if(identifier == 0x4535) {
+//    Serial.println(F("Found LGDP4535 LCD driver"));
+//  }else if(identifier == 0x7575) {
+//    Serial.println(F("Found HX8347G LCD driver"));
+//  } else if(identifier == 0x9341) {
+//    Serial.println(F("Found ILI9341 LCD driver"));
+//  } else if(identifier == 0x8357) {
+//    Serial.println(F("Found HX8357D LCD driver"));
+//  } else if(identifier==0x0101)
+//  {     
+//      identifier=0x9341;
+//       Serial.println(F("Found 0x9341 LCD driver"));
+//  }
+//  else if(identifier==0x1111)
+//  {     
+//      identifier=0x9328;
+//       Serial.println(F("Found 0x9328 LCD driver"));
+//  }
+//  else {
+//    Serial.print(F("Unknown LCD driver chip: "));
+//    Serial.println(identifier, HEX);
+//    Serial.println(F("If using the Elegoo 2.8\" TFT Arduino shield, the line:"));
+//    Serial.println(F("  #define USE_Elegoo_SHIELD_PINOUT"));
+//    Serial.println(F("should appear in the library header (Elegoo_TFT.h)."));
+//    Serial.println(F("If using the breakout board, it should NOT be #defined!"));
+//    Serial.println(F("Also if using the breakout, double-check that all wiring"));
+//    Serial.println(F("matches the tutorial."));
+//    identifier=0x9328;
+//  
+//  }
+//  tft.begin(identifier);
 
-
-#ifdef USE_Elegoo_SHIELD_PINOUT
-  Serial.println(F("Using Elegoo 2.4\" TFT Arduino Shield Pinout"));
-#else
-  Serial.println(F("Using Elegoo 2.4\" TFT Breakout Board Pinout"));
-#endif
-
-  Serial.print("TFT size is "); Serial.print(tft.width()); Serial.print("x"); Serial.println(tft.height());
-
-  tft.reset();
-
-   uint16_t identifier = tft.readID();
-   if(identifier == 0x9325) {
-    Serial.println(F("Found ILI9325 LCD driver"));
-  } else if(identifier == 0x9328) {
-    Serial.println(F("Found ILI9328 LCD driver"));
-  } else if(identifier == 0x4535) {
-    Serial.println(F("Found LGDP4535 LCD driver"));
-  }else if(identifier == 0x7575) {
-    Serial.println(F("Found HX8347G LCD driver"));
-  } else if(identifier == 0x9341) {
-    Serial.println(F("Found ILI9341 LCD driver"));
-  } else if(identifier == 0x8357) {
-    Serial.println(F("Found HX8357D LCD driver"));
-  } else if(identifier==0x0101)
-  {     
-      identifier=0x9341;
-       Serial.println(F("Found 0x9341 LCD driver"));
-  }
-  else if(identifier==0x1111)
-  {     
-      identifier=0x9328;
-       Serial.println(F("Found 0x9328 LCD driver"));
-  }
-  else {
-    Serial.print(F("Unknown LCD driver chip: "));
-    Serial.println(identifier, HEX);
-    Serial.println(F("If using the Elegoo 2.8\" TFT Arduino shield, the line:"));
-    Serial.println(F("  #define USE_Elegoo_SHIELD_PINOUT"));
-    Serial.println(F("should appear in the library header (Elegoo_TFT.h)."));
-    Serial.println(F("If using the breakout board, it should NOT be #defined!"));
-    Serial.println(F("Also if using the breakout, double-check that all wiring"));
-    Serial.println(F("matches the tutorial."));
-    identifier=0x9328;
-  
-  }
-  tft.begin(identifier);
-
-  void* taskQueue = {(void*)task0, (void*)task1, 
-                     (void*)task2, (void*)task3, (void*)task4};
 }
 
 void loop() {
 
-  for (int i = 0; i < 4; i ++) {
-    scheduler(taskQueue[i]);
-    scheduler(taskQueue[4]);
-    delay(1000);
-  }
-  gobalCounter++;
-  /*
-  controller->taskData = (void*) task0;
+  //power system
+/*  controller->taskData = (void*) task0;
   powerSubsystem(controller->taskData);
   controller->taskData = (void*) task4;
   WarningAlarm(controller->taskData);
@@ -194,13 +198,19 @@ void loop() {
 
   controller->taskData = (void*) task4;
   WarningAlarm(controller->taskData); 
-  delay(1000);
+  delay(1000);*/
+  scheduler();
   globalCounter++;
-  */
 }
 
-void scheduler(void *myTask) {
-  myTask->task(myTask);
+void scheduler() {
+  for (int i = 0; i < 5; i++) {
+    if (i != 4){
+      queue[i]->myTask(queue[i]->taskData);
+    }
+    queue[4]->myTask(queue[4]->taskData);
+    delay(1000);
+  }
 }
 
 void consoleDisplay(void *task)
@@ -252,58 +262,57 @@ void consoleDisplay(void *task)
   }
 }
 
-/*void WarningAlarm(void *task) {
+void WarningAlarm(void *task) {
   warningAlarmData *task4 = (warningAlarmData *)task;
-  tft.setCursor(0, 0);
-  tft.setTextSize(4);
-  
-  
-  if(*task4->batLevel <= 10) {
-    if(batcount >= 2){
-      tft.setTextColor(BLACK);
-      batcount = 0;
-    } else {
-      batcount++;
-      tft.setTextColor(RED); 
-    }
-  } else if (*task4->batLevel <= 50) {
-    if(batcount == 1){
-      tft.setTextColor(BLACK);
-      batcount = 0;
-    } else {
-      tft.setTextColor(ORANGE);
-      batcount++;
-    }
-  } else {
-    tft.setTextColor(GREEN);
-  }
-
-  tft.print("BATTERY");
-  tft.println();
-
-  
-  if(*task4->fuelLevel <= 10) {
-    if(fuelcount >= 2) {
-      tft.setTextColor(BLACK);
-      fuelcount = 0;
-    } else {
-       tft.setTextColor(RED);
-       fuelcount++;
-    }
-  } else if (*task4->fuelLevel <= 50) {
-    if(fuelcount == 1) {
-      tft.setTextColor(BLACK);
-      fuelcount = 0;
-    } else {
-       tft.setTextColor(ORANGE);
-       fuelcount++;
-    }
-  } else {
-    tft.setTextColor(GREEN);
-  }
-  
-  tft.print("FUEL");
-  tft.println();
+//  tft.setCursor(0, 0);
+//  tft.setTextSize(4);
+//  
+//  
+//  if(*task4->batLevel <= 10) {
+//    if(batcount >= 2){
+//      tft.setTextColor(BLACK);
+//      batcount = 0;
+//    } else {
+//      batcount++;
+//      tft.setTextColor(RED); 
+//    }
+//  } else if (*task4->batLevel <= 50) {
+//    if(batcount == 1){
+//      tft.setTextColor(BLACK);
+//      batcount = 0;
+//    } else {
+//      tft.setTextColor(ORANGE);
+//      batcount++;
+//    }
+//  } else {
+//    tft.setTextColor(GREEN);
+//  }
+//
+//  tft.print("BATTERY");
+//  tft.println();
+//
+//  
+//  if(*task4->fuelLevel <= 10) {
+//    if(fuelcount >= 2) {
+//      tft.setTextColor(BLACK);
+//      fuelcount = 0;
+//    } else {
+//       tft.setTextColor(RED);
+//       fuelcount++;
+//    }
+//  } else if (*task4->fuelLevel <= 50) {
+//    if(fuelcount == 1) {
+//      tft.setTextColor(BLACK);
+//      fuelcount = 0;
+//    } else {
+//       tft.setTextColor(ORANGE);
+//       fuelcount++;
+//    }
+//  } else {
+//    tft.setTextColor(GREEN);
+//  }
+//  
+//  tft.print("FUEL");
+//  tft.println();
 
 }
-*/

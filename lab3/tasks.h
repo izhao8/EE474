@@ -179,7 +179,7 @@ void satelliteComs(void *task)
 }
 
 unsigned int* convertDtoB(int dec) {
-	unsigned int* command = malloc(sizeof(int) * 100);
+	unsigned int* command = malloc(sizeof(unsigned int) * 100);
 
 	for (int i = 15; i >= 0; i--)
 		{
@@ -197,54 +197,6 @@ unsigned int convertBtoD(unsigned int* bits, int length) {
 
 	return sum;
 }
-
-//void consoleDisplay(void *task)
-//{
-//	//Normal satellite status
-//	consoleDisplayData *task3 = (consoleDisplayData *)task;
-//	printf("BATTERY LEVEL: \t");
-//	if(*task3->batLevel > 100 || *task3->batLevel < 0) {
-//		printf("0\n");
-//	} else {
-//		printf("%d\n", *task3->batLevel);
-//	}
-//	printf("FUEL LEVEL: \t%d\n", *task3->fuelLevel);
-//	printf("POWER CONSUMPTION: \t%d\n", *task3->pwrCon);
-//	printf("POWER GENERATION: \t%d\n", *task3->pwrGen);
-//	printf("CHARGING STATUS: \t");
-//	if (*task3->solarPanelState)
-//	{
-//		printf("ON\n\n");
-//	}
-//	else
-//	{
-//		printf("OFF\n\n");
-//	}
-//
-//	//Annunciation mode
-//	if (*task3->batLevel < 50)
-//	{
-//		*task3->batLow = 1;
-//	}
-//	else
-//	{
-//		*task3->batLow = 0;
-//	}
-//	if (*task3->fuelLevel < 50)
-//	{
-//		*task3->fuelLow = 1;
-//	}
-//	else
-//	{
-//		*task3->fuelLow = 0;
-//	}
-//}
-
-//void WarningAlarm(void *task)
-//{
-//	//warningAlarmData *task4 = (warningAlarmData *)task;
-//
-//}
 
 int randomInteger(int low, int high)
 {

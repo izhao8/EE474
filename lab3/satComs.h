@@ -1,19 +1,25 @@
 #ifndef SATCOMS_H
 #define SATCOMS_H
 
+struct TCB {
+  void* taskData;
+  void (*myTask)(void*);
+  struct TCB* next;
+  struct TCB* prev;
+};
+typedef struct TCB TCB;
+
 struct powerSubsystemData {
 	int* solarPanelState;
 	unsigned short* batLevel;
 	unsigned short* pwrCon;
 	unsigned short* pwrGen;
-	void (*task)(void*);
 };
 typedef struct powerSubsystemData powerSubsystemData;
 
 struct thrusterSubsystemData {
 	unsigned int* thrusterCommand;
 	unsigned short* fuelLevel;
-	void (*task)(void*);
 };
 typedef struct thrusterSubsystemData thrusterSubsystemData;
 
@@ -26,7 +32,6 @@ struct satelliteComsData {
 	unsigned short* pwrCon;
 	unsigned short* pwrGen;
 	unsigned int* thrusterCommand;
-	void (*task)(void*);
 };
 typedef struct satelliteComsData satelliteComsData;
 
@@ -38,7 +43,6 @@ struct consoleDisplayData {
 	unsigned short* fuelLevel;
 	unsigned short* pwrCon;
 	unsigned short* pwrGen;
-	void (*task)(void*);
 };
 typedef struct consoleDisplayData consoleDisplayData;
 
