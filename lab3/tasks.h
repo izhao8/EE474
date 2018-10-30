@@ -18,6 +18,10 @@ unsigned int* convertDtoB(int dec);
 int randomInteger(int low, int high);
 void insert(TCB* node);
 double batteryBuffer(int battery);
+void consoleKeypadTask(void *task);
+void solarPanelControl(void *task);
+void vehicleComms(void* task);
+void powerSubsystem(void *task);
 
 void powerSubsystem(void *task)
 {
@@ -248,4 +252,14 @@ double batteryBuffer(int battery) {
 	double newBat = battery/1024;
 	newBat = 36 * newBat;
 	return newBat;
+}
+
+void consoleKeypadTask(void *task) {
+
+}
+void solarPanelControl(void *task) {
+
+}
+void vehicleComms(void* task) {
+	
 }

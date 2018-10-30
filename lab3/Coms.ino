@@ -61,6 +61,12 @@ int batteryRead = analogRead(13);
     malloc(sizeof(consoleDisplayData));
   warningAlarmData* task4 = (warningAlarmData*) 
     malloc(sizeof(warningAlarmData));
+  vehicleCommsData* task5 = (vehicleCommsData*)
+    malloc(sizeof(vehicleCommsData));
+  consoleKeypadData* task6 = (consoleKeypadData*)
+    malloc(sizeof(vehicleCommsData));
+  solarPanelControlData* task7 = (solarPanelControlData*)
+    malloc(sizeof(solarPanelControlData));
 
   /*
   initialize structs for task control board (TCB)
@@ -70,7 +76,9 @@ int batteryRead = analogRead(13);
   TCB* satellite = (TCB*)malloc(sizeof(TCB));
   TCB* console = (TCB*)malloc(sizeof(TCB));
   TCB* warning = (TCB*)malloc(sizeof(TCB));
-  TCB* queue[5] = {power, thruster, satellite, console, warning};
+  TCB* solarPanel = (TCB*)malloc(sizeof(TCB));
+  TCB* vehicle = (TCB*)malloc(sizeof(TCB));
+  TCB* keypad = (TCB*)malloc(sizeof(TCB));
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -120,6 +128,24 @@ void setup() {
   task4->fuelLevel = &fuelLevel;
   warning->taskData = &task4;
   warning->myTask = &WarningAlarm;
+
+  task5->command = &command;
+  task5->response = &response;
+  vehicle->taskData = &task5;
+  vehicle->myTask = &vehicleComms;
+
+  task6->motorSpeedDec = &motorSpeedDec;
+  task6->motorSpeedInc = &motorSpeedInc;
+  keypad->taskData = &task6;
+  keypad->myTask = &consoleKeypadTask;
+
+  task7->solarPanelState = &solarPanelState;
+  task7->deploy = &deploy;
+  task7->retract = &retract;
+  task7->motorSpeedInc = &motorSpeedInc;
+  task7->motorSpeedDec = &motorSpeedDec;
+  solarPanel->taskData = &task7;
+  solarPanel->myTask = &solarPanelControl;
 
 //  Serial.println(F("TFT LCD test"));
 //
@@ -179,13 +205,7 @@ void loop() {
 }
 
 void scheduler() {
-  for (int i = 0; i < 5; i++) {
-    if (i != 4){
-      queue[i]->myTask(queue[i]->taskData);
-    }
-    queue[4]->myTask(queue[4]->taskData);
-    delay(1000);
-  }
+  
 }
 
 void consoleDisplay(void *task)

@@ -57,11 +57,11 @@ struct warningAlarmData {
 };
 typedef struct warningAlarmData warningAlarmData;
 
-struct miningCommunications {
+struct vehicleCommsData {
 	char* command;
 	char* response;
 };
-typedef struct miningCommunications miningCommunications;
+typedef struct vehicleCommsData vehicleCommsData;
 
 struct consoleKeypadData {
 	int* motorSpeedInc;
