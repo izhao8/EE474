@@ -28,9 +28,10 @@ extern "C" {
 void WarningAlarm(void *task);
 void thrusterSubsystem(void *task);
 void scheduler();
+void vehicleComms(void* task);
 
 int fuelcount, batcount = 0;
-int batteryRead = analogRead(13);
+int batteryRead = analogRead(A13);
   /*
   initialize ALL the variables for the structs as global
   */
@@ -68,17 +69,7 @@ int batteryRead = analogRead(13);
   solarPanelControlData* task7 = (solarPanelControlData*)
     malloc(sizeof(solarPanelControlData));
 
-  /*
-  initialize structs for task control board (TCB)
-  */
-  TCB* power = (TCB*)malloc(sizeof(TCB));
-  TCB* thruster = (TCB*)malloc(sizeof(TCB));
-  TCB* satellite = (TCB*)malloc(sizeof(TCB));
-  TCB* console = (TCB*)malloc(sizeof(TCB));
-  TCB* warning = (TCB*)malloc(sizeof(TCB));
-  TCB* solarPanel = (TCB*)malloc(sizeof(TCB));
-  TCB* vehicle = (TCB*)malloc(sizeof(TCB));
-  TCB* keypad = (TCB*)malloc(sizeof(TCB));
+  
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -205,7 +196,11 @@ void loop() {
 }
 
 void scheduler() {
-  
+  TCB* current = head;
+  while (current != NULL) {
+    current->myTask(current->taskData);
+    current = current->next;
+  }
 }
 
 void consoleDisplay(void *task)
@@ -310,4 +305,9 @@ void WarningAlarm(void *task) {
 //  tft.print("FUEL");
 //  tft.println();
 
+}
+
+void vehicleComms(void* task) {
+  vehicleCommsData* task5 = (vehicleCommsData*) task;
+  
 }

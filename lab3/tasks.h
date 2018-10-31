@@ -20,8 +20,21 @@ void insert(TCB* node);
 double batteryBuffer(int battery);
 void consoleKeypadTask(void *task);
 void solarPanelControl(void *task);
-void vehicleComms(void* task);
 void powerSubsystem(void *task);
+void deleteNode(TCB* node);
+
+/*
+initialize structs for task control board (TCB)
+*/
+TCB* power = (TCB*)malloc(sizeof(TCB));
+TCB* thruster = (TCB*)malloc(sizeof(TCB));
+TCB* satellite = (TCB*)malloc(sizeof(TCB));
+TCB* console = (TCB*)malloc(sizeof(TCB));
+TCB* warning = (TCB*)malloc(sizeof(TCB));
+TCB* solarPanel = (TCB*)malloc(sizeof(TCB));
+TCB* vehicle = (TCB*)malloc(sizeof(TCB));
+TCB* keypad = (TCB*)malloc(sizeof(TCB));
+
 
 void solarPanelControl (void *task) {
 	solarPanelControlData *task0 = (solarPanelControlData *)task;
@@ -312,9 +325,38 @@ void insert(TCB* node) {
 	return;
 }
 
+void deleteNode(TCB* node) {
+	if(node == NULL || head == NULL) {
+		return;
+	}
+	TCB* current = head;
+	while(current->taskData != node->taskData && current != NULL) {
+		current = current->next;
+	}
+	if (current == NULL) {
+		return;
+	}
+
+	if (current == head) {
+		head = head->next;
+		head->prev = NULL;
+	} else if (current == tail) {
+		tail = current->prev;
+		tail->next = NULL;
+	} else if (head == tail) {
+		head = NULL;
+		tail = NULL;
+	} else {
+		current->prev->next = current->next;
+		current->next->prev = current->prev;
+	}
+	//formally deletes the node from memory
+	free(current);
+}
+
 double batteryBuffer(int battery) {
-	double newBat = battery/1024;
-	newBat = 36 * newBat;
+	double newBat = battery * 5;
+	newBat = floor(newBat * 7.2);
 	return newBat;
 }
 
@@ -323,7 +365,4 @@ void consoleKeypadTask(void *task) {
 }
 void solarPanelControl(void *task) {
 
-}
-void vehicleComms(void* task) {
-	
 }
