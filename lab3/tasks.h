@@ -23,6 +23,70 @@ void solarPanelControl(void *task);
 void vehicleComms(void* task);
 void powerSubsystem(void *task);
 
+void solarPanelControl (void *task) {
+	solarPanelControlData *task0 = (solarPanelControlData *)task;
+
+	// task0->solarPanelState;
+	// task0->solarPanelDeploy;
+	// task0->solarPanelRetract;
+	// task0->driveMotorSpeedInc;
+	// task0->driveMotorSpeedDec;
+
+	if (task0->motorSpeedInc) {
+		*task0->deploy = 1;
+		//delay, call consoleKeyPad then set state to 1
+		//interupts();
+		*task0->solarPanelState = 1;
+	} else if (task0->motorSpeedDec) {
+		*task0->retract = 1;
+		//delay, call consoleKeypPad, then set state to 0
+		//interupts();
+		*task0->solarPanelState = 0;
+	}
+}
+
+void consoleKeyPad(void *task, int panelActive) {
+	consoleKeypadData *task0 = (consoleKeypadData *)task;
+	int motorSpeed = 0;
+	char press = 0;
+
+	// Need to figure out a good way of toggleing this block on and off while also keeping track of the 
+	// motorSpeed value...
+	while (panelActive) {
+		printf("Increase (i) or Decrease (d) the drive motors, please enter a command: ");
+		scanf(" %c", &press);
+
+		// letter "I" is pressed
+		if (press == 105) {
+			if ((0 <= motorSpeed) && (motorSpeed < 100)) {
+				*task0->motorSpeedInc = 1;
+				motorSpeed += 5;
+				printf("\nCurrent Motor Speed: %i%%\n\n\n\n\n", motorSpeed);
+			} else if (motorSpeed >= 100) {
+				*task0->motorSpeedInc = 0;
+				motorSpeed = 100;
+				printf("\n\nMotor Speed is at maximum velocity.\n\n");
+			}
+		} 
+		// letter "D" is pressed
+		else if (press == 100) {
+			if ((0 < motorSpeed) && (motorSpeed <= 100)) {
+				*task0->motorSpeedDec = 1;
+				motorSpeed -= 5;
+				printf("\nCurrent Motor Speed: %i%%\n\n\n\n\n", motorSpeed);
+			} else if (motorSpeed <= 0) {
+				*task0->motorSpeedDec = 0;
+				motorSpeed = 0;
+				printf("\n\nMotor is offline. Cannot decrease speed.\n\n");
+			}
+		} 
+		// anything else pressed
+		else {
+			printf("\n\nPlease enter a value of 'i' for increase or 'd' for decrease.\n\n");
+		}
+	}
+}
+
 void powerSubsystem(void *task)
 {
 	powerSubsystemData *task0 = (powerSubsystemData *)task;
