@@ -9,34 +9,34 @@
 int seed = 1;
 //Used in powerManage function
 int globalCounter, consumptionState = 0;
-TCB* head = (TCB*)malloc(sizeof(TCB));
-TCB* tail = (TCB*)malloc(sizeof(TCB));
+TCB *head = (TCB *)malloc(sizeof(TCB));
+TCB *tail = (TCB *)malloc(sizeof(TCB));
 
 void powerManage(void *task0, int i);
-unsigned int convertBtoD(unsigned int* bits, int length);
-unsigned int* convertDtoB(int dec);
+unsigned int convertBtoD(unsigned int *bits, int length);
+unsigned int *convertDtoB(int dec);
 int randomInteger(int low, int high);
-void insert(TCB* node);
+void insert(TCB *node);
 double batteryBuffer(int battery);
 void consoleKeypadTask(void *task);
 void solarPanelControl(void *task);
 void powerSubsystem(void *task);
-void deleteNode(TCB* node);
+void deleteNode(TCB *node);
 
 /*
 initialize structs for task control board (TCB)
 */
-TCB* power = (TCB*)malloc(sizeof(TCB));
-TCB* thruster = (TCB*)malloc(sizeof(TCB));
-TCB* satellite = (TCB*)malloc(sizeof(TCB));
-TCB* console = (TCB*)malloc(sizeof(TCB));
-TCB* warning = (TCB*)malloc(sizeof(TCB));
-TCB* solarPanel = (TCB*)malloc(sizeof(TCB));
-TCB* vehicle = (TCB*)malloc(sizeof(TCB));
-TCB* keypad = (TCB*)malloc(sizeof(TCB));
+TCB *power = (TCB *)malloc(sizeof(TCB));
+TCB *thruster = (TCB *)malloc(sizeof(TCB));
+TCB *satellite = (TCB *)malloc(sizeof(TCB));
+TCB *console = (TCB *)malloc(sizeof(TCB));
+TCB *warning = (TCB *)malloc(sizeof(TCB));
+TCB *solarPanel = (TCB *)malloc(sizeof(TCB));
+TCB *vehicle = (TCB *)malloc(sizeof(TCB));
+TCB *keypad = (TCB *)malloc(sizeof(TCB));
 
-
-void solarPanelControl (void *task) {
+void solarPanelControl(void *task)
+{
 	solarPanelControlData *task0 = (solarPanelControlData *)task;
 
 	// task0->solarPanelState;
@@ -45,12 +45,15 @@ void solarPanelControl (void *task) {
 	// task0->driveMotorSpeedInc;
 	// task0->driveMotorSpeedDec;
 
-	if (task0->motorSpeedInc) {
+	if (task0->motorSpeedInc)
+	{
 		*task0->deploy = 1;
 		//delay, call consoleKeyPad then set state to 1
 		//interupts();
 		*task0->solarPanelState = 1;
-	} else if (task0->motorSpeedDec) {
+	}
+	else if (task0->motorSpeedDec)
+	{
 		*task0->retract = 1;
 		//delay, call consoleKeypPad, then set state to 0
 		//interupts();
@@ -58,43 +61,54 @@ void solarPanelControl (void *task) {
 	}
 }
 
-void consoleKeyPad(void *task, int panelActive) {
+void consoleKeyPad(void *task, int panelActive)
+{
 	consoleKeypadData *task0 = (consoleKeypadData *)task;
 	int motorSpeed = 0;
 	char press = 0;
 
-	// Need to figure out a good way of toggleing this block on and off while also keeping track of the 
+	// Need to figure out a good way of toggleing this block on and off while also keeping track of the
 	// motorSpeed value...
-	while (panelActive) {
+	while (panelActive)
+	{
 		printf("Increase (i) or Decrease (d) the drive motors, please enter a command: ");
 		scanf(" %c", &press);
 
 		// letter "I" is pressed
-		if (press == 105) {
-			if ((0 <= motorSpeed) && (motorSpeed < 100)) {
+		if (press == 105)
+		{
+			if ((0 <= motorSpeed) && (motorSpeed < 100))
+			{
 				*task0->motorSpeedInc = 1;
 				motorSpeed += 5;
 				printf("\nCurrent Motor Speed: %i%%\n\n\n\n\n", motorSpeed);
-			} else if (motorSpeed >= 100) {
+			}
+			else if (motorSpeed >= 100)
+			{
 				*task0->motorSpeedInc = 0;
 				motorSpeed = 100;
 				printf("\n\nMotor Speed is at maximum velocity.\n\n");
 			}
-		} 
+		}
 		// letter "D" is pressed
-		else if (press == 100) {
-			if ((0 < motorSpeed) && (motorSpeed <= 100)) {
+		else if (press == 100)
+		{
+			if ((0 < motorSpeed) && (motorSpeed <= 100))
+			{
 				*task0->motorSpeedDec = 1;
 				motorSpeed -= 5;
 				printf("\nCurrent Motor Speed: %i%%\n\n\n\n\n", motorSpeed);
-			} else if (motorSpeed <= 0) {
+			}
+			else if (motorSpeed <= 0)
+			{
 				*task0->motorSpeedDec = 0;
 				motorSpeed = 0;
 				printf("\n\nMotor is offline. Cannot decrease speed.\n\n");
 			}
-		} 
+		}
 		// anything else pressed
-		else {
+		else
+		{
 			printf("\n\nPlease enter a value of 'i' for increase or 'd' for decrease.\n\n");
 		}
 	}
@@ -104,7 +118,7 @@ void powerSubsystem(void *task)
 {
 	powerSubsystemData *task0 = (powerSubsystemData *)task;
 
-	powerManage((void*) task0, 1); //powerConsumption = 1
+	powerManage((void *)task0, 1); //powerConsumption = 1
 
 	//powerGeneration and solarPanelState
 	if (*task0->solarPanelState == 1)
@@ -116,7 +130,7 @@ void powerSubsystem(void *task)
 		}
 		else
 		{
-			powerManage((void*) task0, 0); //powerGeneration = 0
+			powerManage((void *)task0, 0); //powerGeneration = 0
 		}
 	}
 	else
@@ -128,32 +142,39 @@ void powerSubsystem(void *task)
 	}
 
 	//computes battery level
-	if (*task0->solarPanelState == 0) {
-		if((int)(*task0->batLevel - (3 * (*task0->pwrCon))) < 0) {
+	if (*task0->solarPanelState == 0)
+	{
+		if ((int)(*task0->batLevel - (3 * (*task0->pwrCon))) < 0)
+		{
 			*task0->batLevel = 0;
-		} else {
+		}
+		else
+		{
 			*task0->batLevel -= (3 * (*task0->pwrCon));
 		}
-			
-	} else {
-		if((int)(*task0->batLevel - *task0->pwrCon + *task0->pwrGen) < 0) {
+	}
+	else
+	{
+		if ((int)(*task0->batLevel - *task0->pwrCon + *task0->pwrGen) < 0)
+		{
 			*task0->batLevel = 0;
-		} else {
+		}
+		else
+		{
 			*task0->batLevel = *task0->batLevel - *task0->pwrCon + *task0->pwrGen;
 		}
-		
 	}
 }
 
 void powerManage(void *task0, int i)
 {
-	powerSubsystemData *task = (powerSubsystemData*) task0;
+	powerSubsystemData *task = (powerSubsystemData *)task0;
 	switch (i)
 	{
 	case 1: //powerConsumption
 		switch (consumptionState)
 		{
-		
+
 		case 1: //Reverse power consumption
 			if (globalCounter == 0 || globalCounter % 2 == 0)
 			{
@@ -163,7 +184,8 @@ void powerManage(void *task0, int i)
 			{
 				*task->pwrCon = *task->pwrCon + 1;
 			}
-			if (*task->pwrCon < 5) {
+			if (*task->pwrCon < 5)
+			{
 				consumptionState = 0;
 			}
 			break;
@@ -197,8 +219,9 @@ void powerManage(void *task0, int i)
 		}
 		else if (*task->batLevel > 50 && *task->batLevel < 95)
 		{
-			if (globalCounter == 0 || globalCounter % 2 == 0);
-				*task->pwrGen += 2;
+			if (globalCounter == 0 || globalCounter % 2 == 0)
+				;
+			*task->pwrGen += 2;
 		}
 		break;
 	}
@@ -207,12 +230,12 @@ void powerManage(void *task0, int i)
 void thrusterSubsystem(void *task)
 {
 	thrusterSubsystemData *task1 = (thrusterSubsystemData *)task;
-	unsigned int* command = convertDtoB(*task1->thrusterCommand);
+	unsigned int *command = convertDtoB(*task1->thrusterCommand);
 
-	unsigned short left = (unsigned short) command[0];
-	unsigned short right = (unsigned short) command[1];
-	unsigned short up = (unsigned short) command[2];
-	unsigned short down = (unsigned short) command[3];
+	unsigned short left = (unsigned short)command[0];
+	unsigned short right = (unsigned short)command[1];
+	unsigned short up = (unsigned short)command[2];
+	unsigned short down = (unsigned short)command[3];
 	int direction = left | right | up | down;
 	//questionable if we even need to use magnitude and variable
 	unsigned int magnitude[4] = {
@@ -235,50 +258,67 @@ void thrusterSubsystem(void *task)
 		command[15]};
 	unsigned int sum = convertBtoD(duration, 8);
 
-	if(direction && sum > 0 && (int) *task1->fuelLevel > 0) {
-			if(magBool == 14) {
-				mag = 100;
-				if((int)*task1->fuelLevel - 5 < 0) {
-					*task1->fuelLevel = 0;
-				} else {
-					*task1->fuelLevel -= 5;
-				}
-			} else if(magBool == 0) {
-				mag = 0;
-			} else {
-				mag = 50;
-				if((int)*task1->fuelLevel - 5 < 0) {
-					*task1->fuelLevel = 0;
-				} else {
-					*task1->fuelLevel -= 5;
-				}
+	if (direction && sum > 0 && (int)*task1->fuelLevel > 0)
+	{
+		if (magBool == 14)
+		{
+			mag = 100;
+			if ((int)*task1->fuelLevel - 5 < 0)
+			{
+				*task1->fuelLevel = 0;
 			}
-		} else {
+			else
+			{
+				*task1->fuelLevel -= 5;
+			}
+		}
+		else if (magBool == 0)
+		{
 			mag = 0;
 		}
+		else
+		{
+			mag = 50;
+			if ((int)*task1->fuelLevel - 5 < 0)
+			{
+				*task1->fuelLevel = 0;
+			}
+			else
+			{
+				*task1->fuelLevel -= 5;
+			}
+		}
+	}
+	else
+	{
+		mag = 0;
+	}
 }
 
 void satelliteComs(void *task)
 {
 	satelliteComsData *task2 = (satelliteComsData *)task;
-	*task2->thrusterCommand = (unsigned int) randomInteger(-10, 10);
+	*task2->thrusterCommand = (unsigned int)randomInteger(-10, 10);
 }
 
-unsigned int* convertDtoB(int dec) {
-	unsigned int* command = malloc(sizeof(unsigned int) * 100);
+unsigned int *convertDtoB(int dec)
+{
+	unsigned int *command = malloc(sizeof(unsigned int) * 100);
 
 	for (int i = 15; i >= 0; i--)
-		{
-			command[i] = (dec >> i) & 1;
-		}
+	{
+		command[i] = (dec >> i) & 1;
+	}
 	return command;
 }
 
-unsigned int convertBtoD(unsigned int* bits, int length) {
+unsigned int convertBtoD(unsigned int *bits, int length)
+{
 	unsigned int sum = 0;
-	for (int i = 0; i < length; i++){
-			int binary = bits[i];
-			sum += ((int)pow(2, i)) * binary;
+	for (int i = 0; i < length; i++)
+	{
+		int binary = bits[i];
+		sum += ((int)pow(2, i)) * binary;
 	}
 
 	return sum;
@@ -313,11 +353,15 @@ int randomInteger(int low, int high)
 	return retVal;
 }
 
-void insert(TCB* node) {
-	if (node == NULL) {
+void insert(TCB *node)
+{
+	if (node == NULL)
+	{
 		head = node;
 		tail = node;
-	} else {
+	}
+	else
+	{
 		tail->next = node;
 		node->prev = tail;
 		tail = node;
@@ -325,28 +369,39 @@ void insert(TCB* node) {
 	return;
 }
 
-void deleteNode(TCB* node) {
-	if(node == NULL || head == NULL) {
+void deleteNode(TCB *node)
+{
+	if (node == NULL || head == NULL)
+	{
 		return;
 	}
-	TCB* current = head;
-	while(current->taskData != node->taskData && current != NULL) {
+	TCB *current = head;
+	while (current->taskData != node->taskData && current != NULL)
+	{
 		current = current->next;
 	}
-	if (current == NULL) {
+	if (current == NULL)
+	{
 		return;
 	}
 
-	if (current == head) {
+	if (current == head)
+	{
 		head = head->next;
 		head->prev = NULL;
-	} else if (current == tail) {
+	}
+	else if (current == tail)
+	{
 		tail = current->prev;
 		tail->next = NULL;
-	} else if (head == tail) {
+	}
+	else if (head == tail)
+	{
 		head = NULL;
 		tail = NULL;
-	} else {
+	}
+	else
+	{
 		current->prev->next = current->next;
 		current->next->prev = current->prev;
 	}
@@ -354,15 +409,16 @@ void deleteNode(TCB* node) {
 	free(current);
 }
 
-double batteryBuffer(int battery) {
+double batteryBuffer(int battery)
+{
 	double newBat = battery * 5;
 	newBat = floor(newBat * 7.2);
 	return newBat;
 }
 
-void consoleKeypadTask(void *task) {
-
+void consoleKeypadTask(void *task)
+{
 }
-void solarPanelControl(void *task) {
-
+void solarPanelControl(void *task)
+{
 }
