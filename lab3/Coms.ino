@@ -49,6 +49,7 @@ int batteryRead = analogRead(A13);
   int retract = 0;
   int motorSpeedInc = 0;
   int motorSpeedDec = 0;
+  unsigned short motorDrive = 0;
   /*
   initialize structs for all subsystems (task order tbd)
   */
@@ -135,6 +136,7 @@ void setup() {
   task7->retract = &retract;
   task7->motorSpeedInc = &motorSpeedInc;
   task7->motorSpeedDec = &motorSpeedDec;
+  task7->motorDrive = &motorDrive;
   solarPanel->taskData = &task7;
   solarPanel->myTask = &solarPanelControl;
 

@@ -25,7 +25,7 @@ void deleteNode(TCB *node);
 
 /*
 initialize structs for task control board (TCB)
-*/
+// */
 TCB *power = (TCB *)malloc(sizeof(TCB));
 TCB *thruster = (TCB *)malloc(sizeof(TCB));
 TCB *satellite = (TCB *)malloc(sizeof(TCB));
@@ -39,25 +39,28 @@ void solarPanelControl(void *task)
 {
 	solarPanelControlData *task0 = (solarPanelControlData *)task;
 
-	// task0->solarPanelState;
-	// task0->solarPanelDeploy;
-	// task0->solarPanelRetract;
-	// task0->driveMotorSpeedInc;
-	// task0->driveMotorSpeedDec;
-
 	if (task0->motorSpeedInc)
 	{
+		if ((unsigned int)*task0->motorDrive == 255)
+		{
+			*task0->motorDrive = 0;
+			*task0->solarPanelState = 1; // fully deployed interupt signal
+		}
 		*task0->deploy = 1;
-		//delay, call consoleKeyPad then set state to 1
-		//interupts();
-		*task0->solarPanelState = 1;
+		*task0->retract = 0;
+		*task0->motorDrive += 12.75; // 12.75 is 5% of 255
+		analogWrite(*task0->motorDrive); // pin 13 is PWM
 	}
-	else if (task0->motorSpeedDec)
+	else if (*task0->motorSpeedDec)
 	{
+		if ((unsigned int)task0->motorDrive == 0)
+		{
+			*task0->solarPanelState = 0; // fully retracted interupt signal 
+		}
+		*task0->deploy = 0;
 		*task0->retract = 1;
-		//delay, call consoleKeypPad, then set state to 0
-		//interupts();
-		*task0->solarPanelState = 0;
+		*task0->motorDrive -= 12.75;
+		analogWrite(*task0->motorDrive);
 	}
 }
 
@@ -414,11 +417,4 @@ double batteryBuffer(int battery)
 	double newBat = battery * 5;
 	newBat = floor(newBat * 7.2);
 	return newBat;
-}
-
-void consoleKeypadTask(void *task)
-{
-}
-void solarPanelControl(void *task)
-{
 }
