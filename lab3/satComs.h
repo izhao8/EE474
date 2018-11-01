@@ -75,7 +75,6 @@ struct solarPanelControlData {
 	int* retract;
 	int* motorSpeedInc;
 	int* motorSpeedDec;
-	unsigned short* motorDrive;
 };
 typedef struct solarPanelControlData solarPanelControlData;
 

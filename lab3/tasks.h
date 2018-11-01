@@ -35,6 +35,28 @@ TCB *solarPanel = (TCB *)malloc(sizeof(TCB));
 TCB *vehicle = (TCB *)malloc(sizeof(TCB));
 TCB *keypad = (TCB *)malloc(sizeof(TCB));
 
+void start() 
+{
+	head->next = power;
+	power->next = thruster;
+	thruster->next = satellite;
+	satellite->next = console;
+	console->next = warning;
+	warning->next = solarPanel;
+	solarPanel->next = vehicle;
+	vehicle->next = keypad;
+
+	power->prev = head;
+	thruster->prev = power;
+	satellite->prev = thruster;
+	console->prev = satellite;
+	warning->prev = console;
+	solarPanel->prev = warning;
+	vehicle->prev = solarPanel;
+	keypad->prev = vehicle;
+
+}
+
 void solarPanelControl(void *task)
 {
 	solarPanelControlData *task0 = (solarPanelControlData *)task;

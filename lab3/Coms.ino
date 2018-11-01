@@ -30,6 +30,8 @@ void thrusterSubsystem(void *task);
 void scheduler();
 void vehicleComms(void* task);
 
+int startup = 1;
+int userInput = 1;
 int fuelcount, batcount = 0;
 int batteryRead = analogRead(A13);
   /*
@@ -193,6 +195,15 @@ void setup() {
 }
 
 void loop() {
+  if (startup == 1)
+  {
+    setup();
+    startup = 0;
+  }
+  if (scanf("%d", &userInput))
+  {
+    startup = 1;
+  }
   scheduler();
   globalCounter++;
 }
@@ -311,5 +322,10 @@ void WarningAlarm(void *task) {
 
 void vehicleComms(void* task) {
   vehicleCommsData* task5 = (vehicleCommsData*) task;
-  
+  Serial.write("F");
+  Serial.write("B");
+  Serial.write("L");
+  Serial.write("R");
+  Serial.write("D");
+  Serial.write("H");
 }
