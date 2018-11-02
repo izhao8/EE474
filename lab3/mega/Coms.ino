@@ -29,6 +29,8 @@ void thrusterSubsystem(void *task);
 void scheduler();
 void vehicleComms(void* task);
 void start();
+void insertNode();
+void deleteNode();
 
 
 int startup = 1;
@@ -378,3 +380,61 @@ void start()
   keypad->prev = solarPanel;
 }
 
+void insertNode()
+{
+ TCB* node;
+ if(NULL == head) // If the head pointer is pointing to nothing
+ {
+ head = node; // set the head and tail pointers to point to this node
+ tail = node;
+ }
+else // otherwise, head is not NULL, add the node to the end of the list
+{
+ tail -> next = node;
+ node -> prev = tail; // note that the tail pointer is still pointing
+ // to the prior last node at this point
+ tail = node; // update the tail pointer
+}
+ return;
+} 
+
+void deleteNode()
+{
+  TCB* node;
+  if (node == NULL || head == NULL)
+  {
+    return;
+  }
+  TCB *current = head;
+  while (current->taskData != node->taskData && current != NULL)
+  {
+    current = current->next;
+  }
+  if (current == NULL)
+  {
+    return;
+  }
+
+  if (current == head)
+  {
+    head = head->next;
+    head->prev = NULL;
+  }
+  else if (current == tail)
+  {
+    tail = current->prev;
+    tail->next = NULL;
+  }
+  else if (head == tail)
+  {
+    head = NULL;
+    tail = NULL;
+  }
+  else
+  {
+    current->prev->next = current->next;
+    current->next->prev = current->prev;
+  }
+  //formally deletes the node from memory
+  free(current);
+}

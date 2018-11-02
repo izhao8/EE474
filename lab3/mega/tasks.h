@@ -4,15 +4,12 @@
 #include <math.h>
 
 #include "satComs.h"
-
 //Used in random function for thruster command
 int seed = 1;
 //Used in powerManage function
 int globalCounter, consumptionState, panelActive = 0;
 int pulseLength = 250;
 unsigned long timeMillis, timeMicros = 0;
-/*TCB* head1 = head;
-TCB* tail1 = tail;*/
 void powerManage(void *task0, int i);
 unsigned int convertBtoD(unsigned int *bits, int length);
 unsigned int *convertDtoB(int dec);
@@ -21,9 +18,6 @@ unsigned int batteryBuffer(int battery);
 void consoleKeyPad(void *task);
 void solarPanelControl(void *task);
 void powerSubsystem(void *task);
-void deleteNode(TCB *node);
-void insert(TCB* node);
-
 
 void solarPanelControl(void *task)
 {
@@ -53,7 +47,7 @@ void solarPanelControl(void *task)
 		while(timeMillis + downLength < millis()) {
 			analogWrite(13, 0);
 		}
-		*task0->motorDrive += 5;
+		*task0->motorDrive += 10;
 	} else {
 		if(*task0->deploy) {
 			*task0->solarPanelState = 1;
@@ -65,32 +59,13 @@ void solarPanelControl(void *task)
 		*task0->retract = 0;
 		pulseLength = 250;
 	}
+	Serial.println();
+	Serial.print("MOTOR DRIVE: \t");
 	Serial.println(*task0->motorDrive);
-	Serial.println(pulseLength);
-	
-	/*if (task0->motorSpeedInc)
-	{
-		if ((unsigned int)*task0->motorDrive == 255)
-		{
-			*task0->motorDrive = 0;
-			*task0->solarPanelState = 1; // fully deployed interupt signal
-		}
-		*task0->deploy = 1;
-		*task0->retract = 0;
-		*task0->motorDrive += 12.75; // 12.75 is 5% of 255
-		analogWrite(13, *task0->motorDrive); // pin 13 is PWM
-	}
-	else if (*task0->motorSpeedDec)
-	{
-		if ((unsigned int)*task0->motorDrive == 0)
-		{
-			*task0->solarPanelState = 0; // fully retracted interupt signal 
-		}
-		*task0->deploy = 0;
-		*task0->retract = 1;
-		*task0->motorDrive -= 12.75;
-		analogWrite(13, *task0->motorDrive);
-	}*/
+	Serial.print("PWM SIGNAL: \t");
+	Serial.print(pulseLength);
+	Serial.println("us");
+	Serial.println();
 }
 
 void consoleKeyPad(void *task)
@@ -111,29 +86,6 @@ void consoleKeyPad(void *task)
 	} else {
 		Serial.print("Error: Invalid Input \n");
 	}
-	// Need to figure out a good way of toggleing this block on and off while also keeping track of the
-	// motorSpeed value...
-	/*while (panelActive)
-	{
-		scanf(" %c", &press);
-
-		// letter "I" is pressed
-		
-		// letter "D" is pressed
-		else if (press == 100)
-		{
-			if ((0 < motorSpeed) && (motorSpeed <= 100))
-			{
-				*task0->motorSpeedDec = 1;
-				motorSpeed -= 5;
-			}
-			else if (motorSpeed <= 0)
-			{
-				*task0->motorSpeedDec = 0;
-				motorSpeed = 0;
-			}
-		}
-	}*/
 }
 
 void powerSubsystem(void *task)
@@ -144,8 +96,8 @@ void powerSubsystem(void *task)
 
 	}
 	unsigned long buffer = analogRead(A13);
-	//*task0->batLevel = batteryBuffer(buffer);
-	*task0->batLevel = 5;
+	*task0->batLevel = batteryBuffer(buffer);
+	//*task0->batLevel = 96;
 	if (*task0->solarPanelState == 1)
 	{
 		if ((int)*task0->batLevel > 95)
@@ -354,62 +306,7 @@ int randomInteger(int low, int high)
 	return retVal;
 }
 
-/*void insert(TCB* node)
-{
- if(NULL == head1) // If the head1 pointer is pointing to nothing
- {
- head1 = node; // set the head1 and tail1 pointers to point to this node
- tail1 = node;
- }
-else // otherwise, head1 is not NULL, add the node to the end of the list
-{
- tail1 -> next = node;
- node -> prev = tail1; // note that the tail1 pointer is still pointing
- // to the prior last node at this point
- tail1 = node; // update the tail1 pointer
-}
- return;
-} 
 
-void deleteNode(TCB *node)
-{
-  if (node == NULL || head1 == NULL)
-  {
-    return;
-  }
-  TCB *current = head1;
-  while (current->taskData != node->taskData && current != NULL)
-  {
-    current = current->next;
-  }
-  if (current == NULL)
-  {
-    return;
-  }
-
-  if (current == head1)
-  {
-    head1 = head1->next;
-    head1->prev = NULL;
-  }
-  else if (current == tail1)
-  {
-    tail1 = current->prev;
-    tail1->next = NULL;
-  }
-  else if (head1 == tail1)
-  {
-    head1 = NULL;
-    tail1 = NULL;
-  }
-  else
-  {
-    current->prev->next = current->next;
-    current->next->prev = current->prev;
-  }
-  //formally deletes the node from memory
-  free(current);
-}*/
 unsigned int batteryBuffer(int battery)
 {
 	double newBat = battery * 5 / 1023;
@@ -417,3 +314,4 @@ unsigned int batteryBuffer(int battery)
 	newBat = floor(newBat *2.78);
 	return (unsigned int) newBat;
 }
+
