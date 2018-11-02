@@ -131,7 +131,7 @@ void setup() {
   task6->motorSpeedDec = &motorSpeedDec;
   task6->motorSpeedInc = &motorSpeedInc;
   keypad->taskData = &task6;
-  keypad->myTask = &consoleKeypadTask;
+  keypad->myTask = &consoleKeyPad;
 
   task7->solarPanelState = &solarPanelState;
   task7->deploy = &deploy;

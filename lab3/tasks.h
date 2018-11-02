@@ -8,7 +8,9 @@
 //Used in random function for thruster command
 int seed = 1;
 //Used in powerManage function
-int globalCounter, consumptionState = 0;
+int globalCounter, consumptionState, panelActive = 0;
+unsigned int timeMilli, timeMicro = 0;
+
 TCB *head = (TCB *)malloc(sizeof(TCB));
 TCB *tail = (TCB *)malloc(sizeof(TCB));
 
@@ -18,7 +20,7 @@ unsigned int *convertDtoB(int dec);
 int randomInteger(int low, int high);
 void insert(TCB *node);
 double batteryBuffer(int battery);
-void consoleKeypadTask(void *task);
+void consoleKeyPad(void *task);
 void solarPanelControl(void *task);
 void powerSubsystem(void *task);
 void deleteNode(TCB *node);
@@ -37,7 +39,7 @@ TCB *keypad = (TCB *)malloc(sizeof(TCB));
 
 void start() 
 {
-	head->next = power;
+/*	head->next = power;
 	power->next = thruster;
 	thruster->next = satellite;
 	satellite->next = console;
@@ -54,7 +56,14 @@ void start()
 	solarPanel->prev = warning;
 	vehicle->prev = solarPanel;
 	keypad->prev = vehicle;
-
+*/
+	insert(power);
+	insert(thruster);
+	insert(satellite);
+	insert(console);
+	insert(warning);
+	timeMicro = micros();
+	timeMilli = millis();
 }
 
 void solarPanelControl(void *task)
@@ -71,32 +80,31 @@ void solarPanelControl(void *task)
 		*task0->deploy = 1;
 		*task0->retract = 0;
 		*task0->motorDrive += 12.75; // 12.75 is 5% of 255
-		analogWrite(*task0->motorDrive); // pin 13 is PWM
+		analogWrite(*task0->motorDrive, 13); // pin 13 is PWM
 	}
 	else if (*task0->motorSpeedDec)
 	{
-		if ((unsigned int)task0->motorDrive == 0)
+		if ((unsigned int)*task0->motorDrive == 0)
 		{
 			*task0->solarPanelState = 0; // fully retracted interupt signal 
 		}
 		*task0->deploy = 0;
 		*task0->retract = 1;
 		*task0->motorDrive -= 12.75;
-		analogWrite(*task0->motorDrive);
+		analogWrite(*task0->motorDrive, 13);
 	}
 }
 
-void consoleKeyPad(void *task, int panelActive)
+void consoleKeyPad(void *task)
 {
 	consoleKeypadData *task0 = (consoleKeypadData *)task;
-	int motorSpeed = 0;
+	int motorSpeed = 50;
 	char press = 0;
 
 	// Need to figure out a good way of toggleing this block on and off while also keeping track of the
 	// motorSpeed value...
 	while (panelActive)
 	{
-		printf("Increase (i) or Decrease (d) the drive motors, please enter a command: ");
 		scanf(" %c", &press);
 
 		// letter "I" is pressed
@@ -106,13 +114,11 @@ void consoleKeyPad(void *task, int panelActive)
 			{
 				*task0->motorSpeedInc = 1;
 				motorSpeed += 5;
-				printf("\nCurrent Motor Speed: %i%%\n\n\n\n\n", motorSpeed);
 			}
 			else if (motorSpeed >= 100)
 			{
 				*task0->motorSpeedInc = 0;
 				motorSpeed = 100;
-				printf("\n\nMotor Speed is at maximum velocity.\n\n");
 			}
 		}
 		// letter "D" is pressed
@@ -122,19 +128,12 @@ void consoleKeyPad(void *task, int panelActive)
 			{
 				*task0->motorSpeedDec = 1;
 				motorSpeed -= 5;
-				printf("\nCurrent Motor Speed: %i%%\n\n\n\n\n", motorSpeed);
 			}
 			else if (motorSpeed <= 0)
 			{
 				*task0->motorSpeedDec = 0;
 				motorSpeed = 0;
-				printf("\n\nMotor is offline. Cannot decrease speed.\n\n");
 			}
-		}
-		// anything else pressed
-		else
-		{
-			printf("\n\nPlease enter a value of 'i' for increase or 'd' for decrease.\n\n");
 		}
 	}
 }
