@@ -46,6 +46,7 @@ struct consoleDisplayData {
   unsigned short* pwrCon;
   unsigned short* pwrGen;
  unsigned short* transportDist;
+ int* batteryOverheating;
 };
 typedef struct consoleDisplayData consoleDisplayData;
 
@@ -81,9 +82,28 @@ struct solarPanelControlData {
 };
 typedef struct solarPanelControlData solarPanelControlData;
 
+struct imageCaptureData {
+  unsigned int* imageDataRaw;
+  unsigned int* imageData;
+};
+typedef struct imageCaptureData imageCaptureData;
+
 struct batteryTempData {
-  int* battTemp;
+  int** battTemp;
+  int* batteryOverheating;
 };
 typedef struct batteryTempData batterTempData;
+
+/*
+struct transportDistanceData {
+  
+};
+typedef struct transportDistanceData transportDistanceData;
+
+struct transportCommsData {
+  
+};
+typedef struct transportCommsData transportCommsData;
+*/
 
 #endif

@@ -7,7 +7,7 @@
 //Used in random function for thruster command
 int seed = 1;
 //Used in powerManage function
-int globalCounter, consumptionState, panelActive = 0;
+int globalCounter, consumptionState, panelActive, tempCounter = 0;
 int pulseLength = 250;
 unsigned long timeMillis, timeMicros = 0;
 void powerManage(void *task0, int i);
@@ -18,7 +18,9 @@ unsigned int batteryBuffer(int battery);
 void consoleKeyPad(void *task);
 void solarPanelControl(void *task);
 void powerSubsystem(void *task);
+void batteryTemperature (void *task);
 
+// Solar Panel Control
 void solarPanelControl(void *task)
 {
   solarPanelControlData *task0 = (solarPanelControlData *)task;
@@ -68,6 +70,7 @@ void solarPanelControl(void *task)
   Serial.println();
 }
 
+// Console key pad control 
 void consoleKeyPad(void *task)
 {
   consoleKeypadData *task0 = (consoleKeypadData *)task;
@@ -88,7 +91,7 @@ void consoleKeyPad(void *task)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The power subsytem keeps track of the battery level and the battery temperature and power consomption
 void powerSubsystem(void *task)
 {
   powerSubsystemData *task0 = (powerSubsystemData *)task;
@@ -126,7 +129,35 @@ void powerSubsystem(void *task)
     }
   }
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void batteryTemperature (void *task) {
+  batteryTempData *task = (batteryTempData *)task;
+
+  // Raw binary value of voltage
+  unsigned long sensorOneRaw = analogRead(A14);
+  unsigned long sensorTwoRaw = analogRead(A15);
+
+  // Voltage value
+  int sensorOne = tempBuffer(sensorOneRaw);
+  int sensorTwo = tempBuffer(sensorTwoRaw);
+
+  // Temperature in celcius
+ int sensorOneTemp = 32*sensorOne*1000 + 33;
+ int sensorTwoTemp = 32*sensorTwo*1000 + 33;
+
+  *task->battTemp[tempCounter] = sensorOne;
+  *task->battTemp[tempCounter+1] = sensorTwo; 
+
+  batterTempCheck((void*) task);
+
+  tempCounter += 2;
+
+  if (tempCounter >= 14) {
+    tempCounter = 0;
+  }
+
+}
+
 
 void powerManage(void *task0, int i)
 {
@@ -324,3 +355,23 @@ unsigned int batteryBuffer(int battery)
   newBat = floor(newBat *2.78);
   return (unsigned int) newBat;
 }
+
+unsigned int tempBuffer(int temp) {
+  double newTemp = temp * 3.25 / 1023;
+}
+
+// Check battery temperature and set overheating flag
+void battTempCheck (void *task) {
+  batteryTempData *task = (batteryTempData *)task;
+
+  for (int i = 0; i < 15; i++) {
+    if (*task->battTemp[tempCounter] > (*task->battTemp[i] * 1.2)) {
+      *task0-> batteryOverheating = 1;
+    } else if (*task->battTemp[tempCounter+1] > (*task->battTemp[i] * 1.2)) {
+      *task0-> batteryOverheating = 1;
+    } else {
+      *task0-> batteryOverheating = 0;
+    } 
+  }
+}
+
