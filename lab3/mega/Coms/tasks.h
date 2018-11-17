@@ -104,8 +104,6 @@ void powerSubsystem(void *task)
  unsigned long buffer = analogRead(A13);
   *task0->batLevel = batteryBuffer(buffer);
 
- 
-  //*task0->batLevel = 96;
   if (*task0->solarPanelState == 1)
   {
     if ((int)*task0->batLevel > 95)
@@ -323,4 +321,22 @@ unsigned int batteryBuffer(int battery)
   newBat = floor(newBat * 7.2);
   newBat = floor(newBat *2.78);
   return (unsigned int) newBat;
+}
+
+int inputCheck(int press) {
+  if(press == 102) {
+    return 1;
+  } else if(press == 98) {
+    return 1;
+  } else if(press == 108) {
+    return 1;
+  } else if(press == 114) {
+    return 1;
+  } else if(press == 100) {
+    return 1;
+  } else if(press == 104) {
+    return 1;
+  } else {
+    return 0;
+  }
 }

@@ -29,8 +29,8 @@ void thrusterSubsystem(void *task);
 void scheduler();
 void vehicleComms(void* task);
 void start();
-void insertNode();
-void deleteNode();
+void insertNode(uintptr_t address);
+void deleteNode(uintptr_t address);
 
 
 int startup = 1;
@@ -54,6 +54,11 @@ int fuelcount, batcount = 0;
   int motorSpeedInc = 0;
   int motorSpeedDec = 0;
   unsigned short motorDrive = 0;
+  int battTemp[16] = {0};
+  int batteryOverheating = 0;
+  unsigned int imageRaw[8] = {0};
+  unsigned int image[8] = {0};
+  unsigned short transportDist = 0;
   /*
   initialize structs for all subsystems (task order tbd)
   */
@@ -350,12 +355,20 @@ void WarningAlarm(void *task) {
 
 void vehicleComms(void* task) {
   vehicleCommsData* task5 = (vehicleCommsData*) task;
-  Serial1.println("F");
-  Serial.println("Waiting for response...");
-  while(Serial1.available() <= 0) {
-    Serial1.println(Serial.read());
+  int press = 0;
+  timeMillis = millis();
+  while (millis() - timeMillis < 2000) {
+
   }
-  Serial.println("Command recieved");
+  Serial.println();
+  press = Serial.read();
+
+  if(inputCheck(press)) {
+    Serial.write(press);
+    Serial.println("Command Response");
+  } else {
+    Serial.print("Error: Invalid Input \n");
+  }
 }
 
 void start() 
@@ -380,9 +393,9 @@ void start()
   keypad->prev = solarPanel;
 }
 
-void insertNode()
+void insertNode(uintptr_t address)
 {
- TCB* node;
+ TCB* node = (TCB*) address;
  if(NULL == head) // If the head pointer is pointing to nothing
  {
  head = node; // set the head and tail pointers to point to this node
@@ -398,9 +411,9 @@ else // otherwise, head is not NULL, add the node to the end of the list
  return;
 } 
 
-void deleteNode()
+void deleteNode(uintptr_t address)
 {
-  TCB* node;
+  TCB* node = (TCB*) address;
   if (node == NULL || head == NULL)
   {
     return;
