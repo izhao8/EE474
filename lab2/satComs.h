@@ -3,6 +3,7 @@
 
 struct TCB {
 	void* taskData;
+	void (*myTask)(void*);
 };
 typedef struct TCB TCB;
 

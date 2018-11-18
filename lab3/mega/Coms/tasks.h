@@ -23,6 +23,8 @@ void solarPanelControl(void *task);
 void powerSubsystem(void *task);
 void batteryTemperature (void *task);
 signed int optfft(signed int x[256], signed int y[256]);
+unsigned int tempBuffer(int temp);
+void battTempCheck (void *task);
 
 
 // Solar Panel Control
@@ -134,7 +136,7 @@ void powerSubsystem(void *task)
 }
 
 void batteryTemperature (void *task) {
-  batteryTempData *task = (batteryTempData *)task;
+  powerSubsystemData *task0 = (powerSubsystemData *)task;
 
   // Raw binary value of voltage
   unsigned long sensorOneRaw = analogRead(A14);
@@ -148,10 +150,10 @@ void batteryTemperature (void *task) {
  int sensorOneTemp = 32*sensorOne*1000 + 33;
  int sensorTwoTemp = 32*sensorTwo*1000 + 33;
 
-  *task->battTemp[tempCounter] = sensorOne;
-  *task->battTemp[tempCounter+1] = sensorTwo; 
+  task0->battTemp[tempCounter] = sensorOne;
+  task0->battTemp[tempCounter+1] = sensorTwo; 
 
-  batterTempCheck((void*) task);
+  battTempCheck((void*) task0);
 
   tempCounter += 2;
 
@@ -362,17 +364,21 @@ unsigned int batteryBuffer(int battery)
 // Convert batter temperature from binary to voltage
 unsigned int tempBuffer(int temp) {
   double newTemp = temp * 3.25 / 1023;
+  return newTemp;
 }
 
 // Check battery temperature and set overheating flag
 void battTempCheck (void *task) {
-  batteryTempData *task = (batteryTempData *)task;
-
+  powerSubsystemData *task0 = (powerSubsystemData *)task;
+  timeMicros = micros();
+  while(micros() < timeMicros + 500) {
+  	
+  }
   for (int i = 0; i < 15; i++) {
-    if (*task->battTemp[tempCounter] > (*task->battTemp[i] * 1.2)) {
-      *task0->batteryOverheating = 1;
-    } else if (*task->battTemp[tempCounter+1] > (*task->battTemp[i] * 1.2)) {
-      *task0->batteryOverheating = 1;
+    if (task0->battTemp[tempCounter] > (task0->battTemp[i] * 1.2)) {
+      *task0-> batteryOverheating = 1;
+    } else if (task0->battTemp[tempCounter+1] > (task0->battTemp[i] * 1.2)) {
+      *task0-> batteryOverheating = 1;
     } else {
       *task0->batteryOverheating = 0;
     } 

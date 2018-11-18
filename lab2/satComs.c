@@ -222,8 +222,8 @@ void satelliteComs(void *task)
 
 unsigned int* convertDtoB(int dec) {
 	unsigned int* command = malloc(sizeof(int) * 100);
-
-	for (int i = 15; i >= 0; i--)
+	int i;
+	for (i = 15; i >= 0; i--)
 		{
 			command[i] = (dec >> i) & 1;
 		}
@@ -232,7 +232,8 @@ unsigned int* convertDtoB(int dec) {
 
 unsigned int convertBtoD(unsigned int* bits, int length) {
 	unsigned int sum;
-	for (int i = 0; i < length; i++){
+	int i;
+	for (i = 0; i < length; i++){
 			int binary = bits[i];
 			sum += ((int)pow(2, i)) * binary;
 	}
