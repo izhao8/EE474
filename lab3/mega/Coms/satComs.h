@@ -6,6 +6,7 @@ struct TCB {
   void (*myTask)(void*);
   struct TCB* next;
   struct TCB* prev;
+  int priority;
 };
 typedef struct TCB TCB;
 
@@ -17,7 +18,7 @@ struct powerSubsystemData {
   unsigned short* pwrCon;
   unsigned short* pwrGen;
   int* batteryOverheating;
-  int** battTemp;
+  int* battTemp;
 };
 typedef struct powerSubsystemData powerSubsystemData;
 
@@ -48,8 +49,7 @@ struct consoleDisplayData {
   unsigned short* pwrCon;
   unsigned short* pwrGen;
  unsigned short* transportDist;
- int* batteryOverheating;
- int** battTemp;
+ int* battTemp;
 };
 typedef struct consoleDisplayData consoleDisplayData;
 
@@ -93,22 +93,9 @@ struct imageCaptureData {
 };
 typedef struct imageCaptureData imageCaptureData;
 
-struct batteryTempData {
-  int** battTemp;
-  int* batteryOverheating;
-};
-typedef struct batteryTempData batterTempData;
-
-/*
 struct transportDistanceData {
-  
+  unsigned short* transportDist;
 };
 typedef struct transportDistanceData transportDistanceData;
-
-struct transportCommsData {
-  
-};
-typedef struct transportCommsData transportCommsData;
-*/
 
 #endif

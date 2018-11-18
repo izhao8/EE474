@@ -35,7 +35,7 @@ void deleteNode(uintptr_t address);
 
 int startup = 1;
 int userInput = 1;
-int fuelcount, batcount = 0;
+int fuelcount, batcount, tempcount, recieved = 0;
   /*
   initialize ALL the variables for the structs as global
   */
@@ -56,9 +56,9 @@ int fuelcount, batcount = 0;
   unsigned short motorDrive = 0;
   int battTemp[16] = {0};
   int batteryOverheating = 0;
-  unsigned int imageRaw[8] = {0};
-  unsigned int image[8] = {0};
-  unsigned short transportDist = 0;
+  unsigned int imageDataRaw[8] = {0};
+  unsigned int imageData[8] = {0};
+  unsigned short transportDist[8] = {0};
   /*
   initialize structs for all subsystems (task order tbd)
   */
@@ -78,6 +78,10 @@ int fuelcount, batcount = 0;
     malloc(sizeof(vehicleCommsData));
   solarPanelControlData* task7 = (solarPanelControlData*)
     malloc(sizeof(solarPanelControlData));
+  imageCaptureData* task8 = (imageCaptureData*)
+    malloc(sizeof(imageCaptureData));
+  transportDistanceData* task9 = (transportDistanceData*)
+    malloc(sizeof(transportDistanceData));
 
 /*
 initialize structs for task control board (TCB)
@@ -90,6 +94,9 @@ TCB *warning = (TCB *)malloc(sizeof(TCB));
 TCB *solarPanel = (TCB *)malloc(sizeof(TCB));
 TCB *vehicle = (TCB *)malloc(sizeof(TCB));
 TCB *keypad = (TCB *)malloc(sizeof(TCB));
+TCB *image = (TCB *)malloc(sizeof(TCB));
+TCB *transport = (TCB *)malloc(sizeof(TCB));
+
 TCB *head = (TCB *)malloc(sizeof(TCB));
 TCB *tail = (TCB *)malloc(sizeof(TCB));
 
@@ -105,14 +112,18 @@ void setup() {
   task0->pwrGen = &pwrGen;
   task0->deploy = &deploy;
   task0->retract = &retract;
+  task0->batteryOverheating = &batteryOverheating;
+  task0->battTemp = battTemp;
   power->taskData = task0;
   power->myTask = &powerSubsystem;
+  power->priority = 1;
 
   //thrusterSubsystemData variables
   task1->thrusterCommand = &thusterCommand;
   task1->fuelLevel = & fuelLevel;
   thruster->taskData = task1;
   thruster->myTask = &thrusterSubsystem;
+  thruster->priority = 2;
 
   //satelliteComsData variables
   task2->fuelLow = &fuelLow;
@@ -125,6 +136,7 @@ void setup() {
   task2->thrusterCommand = &thusterCommand;
   satellite->taskData = task2;
   satellite->myTask = &satelliteComs;
+  satellite->priority = 3;
 
   //consoleDisplayData variables
   task3->fuelLow = &fuelLow;
@@ -134,8 +146,11 @@ void setup() {
   task3->fuelLevel = &fuelLevel;
   task3->pwrCon = &pwrCon;
   task3->pwrGen = &pwrGen;
+  task3->transportDist = transportDist;
+  task3->battTemp = battTemp;
   console->taskData = task3;
   console->myTask = &consoleDisplay;
+  console->priority = 4;
 
   //warningAlarmData variables
   task4->fuelLow = &fuelLow;
@@ -143,18 +158,22 @@ void setup() {
   task4->solarPanelState = &solarPanelState;
   task4->batLevel = &batLevel;
   task4->fuelLevel = &fuelLevel;
+  task4->batteryOverheating = &batteryOverheating;
   warning->taskData = task4;
   warning->myTask = &WarningAlarm;
+  warning->priority = 5;
 
   task5->command = &command;
   task5->response = &response;
   vehicle->taskData =&task5;
   vehicle->myTask = &vehicleComms;
+  warning->priority = 4;
 
   task6->motorSpeedDec = &motorSpeedDec;
   task6->motorSpeedInc = &motorSpeedInc;
   keypad->taskData = task6;
   keypad->myTask = &consoleKeyPad;
+  keypad->priority = 2;
 
   task7->solarPanelState = &solarPanelState;
   task7->deploy = &deploy;
@@ -164,6 +183,19 @@ void setup() {
   task7->motorDrive = &motorDrive;
   solarPanel->taskData = task7;
   solarPanel->myTask = &solarPanelControl;
+  solarPanel->priority = 1;
+
+  task8->imageDataRaw = imageDataRaw;
+  task8->imageData = imageData;
+  image->taskData = &task8;
+  image->myTask = &imageCapture;
+  image->priority = 3;
+
+  task9->transportDist = transportDist;
+  transport->taskData = &task9;
+  transport->myTask = transportDistance;
+  image->priority = 3;
+
 
  Serial.println(F("TFT LCD test"));
 
@@ -296,6 +328,9 @@ void consoleDisplay(void *task)
   {
     *task3->fuelLow = 0;
   }
+  Serial.print("TRANSPORT DISTANCE: \t");
+  Serial.println(task9->transportDist[0]);
+
 }
 
 void WarningAlarm(void *task) {
@@ -303,6 +338,19 @@ void WarningAlarm(void *task) {
  tft.setCursor(0, 0);
  tft.setTextSize(4);
  
+  if(*task4->batteryOverheating) {
+    tft.setTextColor(RED);
+    tft.print("TEMPERATURE");
+    timeMillis = millis();
+    if(!recieved) {
+      while((millis() < timeMillis + 15000)) {
+        if (Serial.read() > 0) {
+          recieved = 1;
+          break;
+        }
+      }
+    }
+  }
  
  if(*task4->batLevel <= 10) {
    if(batcount >= 2){
@@ -326,7 +374,6 @@ void WarningAlarm(void *task) {
 
  tft.print("BATTERY");
  tft.println();
-
  
  if(*task4->fuelLevel <= 10) {
    if(fuelcount >= 2) {
@@ -351,6 +398,31 @@ void WarningAlarm(void *task) {
  tft.print("FUEL");
  tft.println();
 
+   if(!recieved) {
+    int count = 0;
+    if(tempcount < 5) {
+      while (count < 10) {
+        tft.setCursor(0, 0);
+        if(count%2 == 0) {
+          tft.setTextColor(BLACK);
+          tft.print("TEMPERATURE");
+        } else {
+          tft.setTextColor(RED);
+          tft.print("TEMPERATURE");
+        }
+        count++;
+      }
+    } else {
+      tft.setCursor(0, 0);
+      tft.setTextColor(RED);
+      tft.print("TEMPERATURE");
+    }
+    if (tempcount >= 10) {
+      tempcount = 0;
+    } else {
+      tempcount++;
+    }
+  }
 }
 
 void vehicleComms(void* task) {
