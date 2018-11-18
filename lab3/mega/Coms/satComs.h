@@ -93,18 +93,12 @@ struct imageCaptureData {
 };
 typedef struct imageCaptureData imageCaptureData;
 
-struct batteryTempData {
-  int** battTemp;
-  int* batteryOverheating;
-};
-typedef struct batteryTempData batterTempData;
-
-/*
 struct transportDistanceData {
-  
+  int* transportDistance;
 };
 typedef struct transportDistanceData transportDistanceData;
 
+/*
 struct transportCommsData {
   
 };

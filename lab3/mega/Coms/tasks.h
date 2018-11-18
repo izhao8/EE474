@@ -4,12 +4,15 @@
 #include <math.h>
 
 #include "satComs.h"
+
+#define ABS(x)  (((x)<0)?(-(x)):(x))
+#define CEILING(x) (((x)>511)?511:(x))
 //Used in random function for thruster command
 int seed = 1;
 //Used in powerManage function
-int globalCounter, consumptionState, panelActive, tempCounter = 0;
+int globalCounter, consumptionState, panelActive, tempCounter, transCounter = 0;
 int pulseLength = 250;
-unsigned long timeMillis, timeMicros = 0;
+unsigned long timeMillis, timeMicros, signalTime = 0;
 void powerManage(void *task0, int i);
 unsigned int convertBtoD(unsigned int *bits, int length);
 unsigned int *convertDtoB(int dec);
@@ -19,6 +22,8 @@ void consoleKeyPad(void *task);
 void solarPanelControl(void *task);
 void powerSubsystem(void *task);
 void batteryTemperature (void *task);
+signed int optfft(signed int x[256], signed int y[256]);
+
 
 // Solar Panel Control
 void solarPanelControl(void *task)
@@ -354,6 +359,7 @@ unsigned int batteryBuffer(int battery)
   return (unsigned int) newBat;
 }
 
+// Convert batter temperature from binary to voltage
 unsigned int tempBuffer(int temp) {
   double newTemp = temp * 3.25 / 1023;
 }
@@ -364,15 +370,16 @@ void battTempCheck (void *task) {
 
   for (int i = 0; i < 15; i++) {
     if (*task->battTemp[tempCounter] > (*task->battTemp[i] * 1.2)) {
-      *task0-> batteryOverheating = 1;
+      *task0->batteryOverheating = 1;
     } else if (*task->battTemp[tempCounter+1] > (*task->battTemp[i] * 1.2)) {
-      *task0-> batteryOverheating = 1;
+      *task0->batteryOverheating = 1;
     } else {
-      *task0-> batteryOverheating = 0;
+      *task0->batteryOverheating = 0;
     } 
   }
 }
 
+// Check if any of the follownig keys were pressed
 int inputCheck(int press) {
   if(press == 102) {
     return 1;
@@ -390,3 +397,104 @@ int inputCheck(int press) {
     return 0;
   }
 }
+
+
+void imageCapture(*void) {
+    imageCaptureData *task1 = (imageCaptureData *)task;
+    
+    // Raw binary
+    *task->imageDataRaw = analogRead(A12);
+
+    // int frequency = ?;
+
+    // FFT preformed on bindary to give us an int
+    *task->imageData = optfft(*task->imageDataRaw, frequency);
+
+}
+
+
+// Fast Fourier Transform Function
+signed int optfft(signed int real[256], signed int imag[256]) {
+
+signed int i, i1, j, l, l1, l2, t1, t2, u;
+
+#include "tables.c"
+
+  /* Bit reversal. */
+  /*Do the bit reversal */
+  l2 = 128;
+  i=0;
+  for(l=0;l<255;l++) {
+    if(l < i) {
+      j=real[l];real[l]=real[i];real[i]=j;
+    }
+    l1 = l2;
+    while (l1 <= i){
+      i -= l1;
+      l1 >>= 1;
+    }
+    i += l1;
+  }
+
+  /* Compute the FFT */
+  u = 0;
+  l2 = 1;
+  for(l=0;l<8;l++){
+    l1 = l2;
+    l2 <<= 1;
+    for(j=0;j<l1;j++){
+      for(i=j;i<256;i+=l2){
+        i1 = i + l1;
+        t1 = (u1[u]*real[i1] - u2[u]*imag[i1])/32; 
+        t2 = (u1[u]*imag[i1] + u2[u]*real[i1])/32;
+        real[i1] = real[i]-t1;
+        imag[i1] = imag[i]-t2;
+        real[i] += t1;
+        imag[i] += t2;
+      }
+      u++;
+    }
+  }
+
+  /* Find the highest amplitude value */
+  /* start at index 1 because 0 can hold high values */
+  j=1;
+  l=0;      
+  for ( i=1; i<(128); i++ ) {
+    l1 = square[CEILING(ABS(real[i]))]+square[CEILING(ABS(imag[i]))];
+    if (l1 > l) {
+      j = i;
+      l = l1;
+    }
+  }
+  return (j);
+}
+
+void transportDistance (*void) {
+  transportDistancData *task0 = (transportDistancData *)task;
+  int duration = floor(pulseIn(A12, HIGH)); //Reads a pulse and returns it in microseconds
+
+  // At 35Hz, duration = 2857 us (micro)
+  // At 3.75kHz, duration = 27 us
+
+  // Then convert that to meters
+ short distance = floor(0.671378 * duration); 
+
+if(transCounter == 0) {
+  if(task0->transportDist[7]*1.1 < distance) {
+    task0->transportDist[transCounter] = distance;
+  }
+} else{
+  if(task0->transportDist[transCounter-1]*1.1 < distance) {
+    task0->transportDist[transCounter] = distance;
+  }
+}
+
+  if (transCounter >= 7) {
+    transCounter = 0;
+  } else {
+    transCounter++;
+  }
+
+}
+
