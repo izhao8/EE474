@@ -409,13 +409,15 @@ void imageCapture(*void) {
     imageCaptureData *task1 = (imageCaptureData *)task;
     
     // Raw binary
-    *task->imageDataRaw = analogRead(A12);
+    for (int i = 0; i < 15; i++ ) {
+      task->imageDataRaw[i] = analogRead(A12);
+    }
+    int temp[256] = task->imageDataRaw;
+    int outTemp[256] = optfft(temp, 0);
 
-    // int frequency = ?;
-
-    // FFT preformed on bindary to give us an int
-    *task->imageData = optfft(*task->imageDataRaw, frequency);
-
+    for (int i = 0; i < 15; i++ ) {
+      task->imageData[i] = outTemp[i];
+    }
 }
 
 
