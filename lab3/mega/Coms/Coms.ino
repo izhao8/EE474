@@ -56,8 +56,7 @@ int fuelcount, batcount, tempcount, recieved = 0;
   unsigned short motorDrive = 0;
   int battTemp[16] = {0};
   int batteryOverheating = 0;
-  unsigned int imageDataRaw[8] = {0};
-  unsigned int imageData[8] = {0};
+  signed int imageData = {0};
   int transportDist = 0;
   /*
   initialize structs for all subsystems (task order tbd)
@@ -185,8 +184,7 @@ void setup() {
   solarPanel->myTask = &solarPanelControl;
   solarPanel->priority = 1;
 
-  task8->imageDataRaw = imageDataRaw;
-  task8->imageData = imageData;
+  task8->imageData = &imageData;
   image->taskData = &task8;
   image->myTask = &imageCapture;
   image->priority = 3;

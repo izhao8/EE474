@@ -10,10 +10,11 @@
 //Used in random function for thruster command
 int seed = 1;
 //Used in powerManage function
-int globalCounter, consumptionState, panelActive, tempCounter,transCounter = 0;
+int globalCounter, consumptionState, panelActive, tempCounter,transCounter, imageCounter = 0;
 int pulseLength = 250;
 int distance= 0;
 unsigned short transportBuffer[8] = {0};
+int imageBuffer[16] = {0};
 unsigned long timeMillis, timeMicros, signalTime = 0;
 void powerManage(void *task0, int i);
 unsigned int convertBtoD(unsigned int *bits, int length);
@@ -29,8 +30,7 @@ unsigned int tempBuffer(int temp);
 void battTempCheck (void *task);
 void imageCapture(void* task);
 void transportDistance (void * task);
-void bufferCheck();
-
+void bufferCheck
 // Solar Panel Control
 void solarPanelControl(void *task)
 {
@@ -413,8 +413,7 @@ int inputCheck(int press) {
 
 void imageCapture(void* task) {
     imageCaptureData *task1 = (imageCaptureData *)task;
-    unsigned int buffer[16];
-    // Raw binary
+    /*// Raw binary
     for (int i = 0; i < 15; i++ ) {
       buffer[16] = analogRead(A12);
     }
@@ -428,7 +427,23 @@ void imageCapture(void* task) {
 
     for (int i = 0; i < 15; i++ ) {
       //*task1->imageData[i] = outTemp[i];
-    }
+    }*/
+  double real[256] = {0};
+  for(int i = 0; i < 256:i++) {
+    real[i] = (analogRead(A0)*5/1023) - 1.5;
+    delayMicroseconds(100);
+  }
+
+  signed int index = optfft(real, {0});
+  int N = pow(2, index);
+  *task1->imageData = 10000*index/N;
+  imageBuffer[imageCounter] = *task1->imageData;
+
+  if(imageCounter >= 16) {
+    imageCounter = 0;
+  } else {
+    imageCounter++;
+  }
 }
 
 
@@ -518,7 +533,6 @@ void bufferCheck() {
   difference = abs(difference);
   if(transCounter == 0) {
     if (difference > (transportBuffer[7] * 0.1)){
-      Serial.println("first");
       transportBuffer[transCounter] = distance;
 
       if(transCounter >= 7) {
@@ -530,7 +544,6 @@ void bufferCheck() {
     } 
   }else {
       if (difference > (transportBuffer[transCounter-1] * 0.1)){
-        Serial.println("got here");
         transportBuffer[transCounter] = distance;
 
         if(transCounter >= 7) {

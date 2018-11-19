@@ -88,8 +88,7 @@ struct solarPanelControlData {
 typedef struct solarPanelControlData solarPanelControlData;
 
 struct imageCaptureData {
-  unsigned int* imageDataRaw;
-  unsigned int* imageData;
+  signed int* imageData;
 };
 typedef struct imageCaptureData imageCaptureData;
 
