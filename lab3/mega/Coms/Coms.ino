@@ -35,7 +35,8 @@ void bufferCheck();
 
 int startup = 1;
 int userInput = 1;
-int fuelcount, batcount, tempcount, recieved = 0;
+int fuelcount, batcount, tempcount, ackCounter = 0;
+int recieved, ack = 1;
   /*
   initialize ALL the variables for the structs as global
   */
@@ -53,10 +54,10 @@ int fuelcount, batcount, tempcount, recieved = 0;
   int retract = 0;
   int motorSpeedInc = 0;
   int motorSpeedDec = 0;
+  double battTemp1, battTemp2 = 0;
   unsigned short motorDrive = 0;
-  int battTemp[16] = {0};
   int batteryOverheating = 0;
-  signed int imageData = {0};
+  double imageData = 0;
   int transportDist = 0;
   /*
   initialize structs for all subsystems (task order tbd)
@@ -112,7 +113,8 @@ void setup() {
   task0->deploy = &deploy;
   task0->retract = &retract;
   task0->batteryOverheating = &batteryOverheating;
-  task0->battTemp = battTemp;
+  task0->battTemp1 = &battTemp1;
+  task0->battTemp2 = &battTemp2;
   power->taskData = task0;
   power->myTask = &powerSubsystem;
   power->priority = 1;
@@ -146,7 +148,7 @@ void setup() {
   task3->pwrCon = &pwrCon;
   task3->pwrGen = &pwrGen;
   task3->transportDist = transportDist;
-  task3->battTemp = battTemp;
+  task3->battTemp = &battTemp2;
   console->taskData = task3;
   console->myTask = &consoleDisplay;
   console->priority = 4;
@@ -185,12 +187,12 @@ void setup() {
   solarPanel->priority = 1;
 
   task8->imageData = &imageData;
-  image->taskData = &task8;
+  image->taskData = task8;
   image->myTask = &imageCapture;
   image->priority = 3;
 
   task9->transportDist = &transportDist;
-  transport->taskData = &task9;
+  transport->taskData = task9;
   transport->myTask = transportDistance;
   transport->priority = 3;
 
@@ -248,14 +250,14 @@ void setup() {
 }
 
 void loop() { 
-/*  if(deploy || retract) {
+  if(deploy || retract) {
     head = solarPanel;
     tail = keypad;
   } else {
     head = power;
     tail = vehicle;
   }
-  scheduler();*/
+  scheduler();
   //solarPanel->myTask(solarPanel->taskData);
 /*  transport->myTask(transport->taskData);
   bufferCheck();
@@ -269,9 +271,8 @@ void loop() {
 /*  analogWrite(45,255);
   delay(250);
   analogWrite(45, 0);
-  delay(1000);*/
-
-
+  delay(1000);
+  */
 }
 
 void scheduler() {
@@ -287,6 +288,15 @@ void scheduler() {
     }
   }
 
+  Serial.print("Image Capture?");
+  time = millis();
+  while(millis() - time < 1000){
+
+  }
+  int press = Serial.read();
+  if (press > 0){
+    image->myTask(image->taskData);
+  }
   globalCounter++;
 }
 
@@ -343,7 +353,9 @@ void consoleDisplay(void *task)
     *task3->fuelLow = 0;
   }
   Serial.print("TRANSPORT DISTANCE: \t");
-  Serial.println(task9->transportDist[0]);
+  Serial.println(*task9->transportDist);
+  Serial.print("TEMPERATUR: \t");
+  Serial.println(*task3->battTemp);
 
 }
 
@@ -352,19 +364,6 @@ void WarningAlarm(void *task) {
  tft.setCursor(0, 0);
  tft.setTextSize(4);
  
-  if(*task4->batteryOverheating) {
-    tft.setTextColor(RED);
-    tft.print("TEMP");
-    timeMillis = millis();
-    if(!recieved) {
-      while((millis() < timeMillis + 15000)) {
-        if (Serial.read() > 0) {
-          recieved = 1;
-          break;
-        }
-      }
-    }
-  }
  
  if(*task4->batLevel <= 10) {
    if(batcount >= 2){
@@ -412,24 +411,43 @@ void WarningAlarm(void *task) {
  tft.print("FUEL");
  tft.println();
 
-   if(!recieved) {
+
+ if(batteryOverheating && !recieved) {
+    ack = 0;
+    tft.setCursor(0,65);
+    tft.setTextColor(RED);
+    tft.print("TEMP");
+    ackCounter++;
+    //if(!recieved) {
+    int press = 0;
+
+      press = Serial.read();
+      if(press > 0) {
+        recieved = 1;
+      } else {
+        recieved = 0;
+      }
+    //}
+  if(!recieved && ackCounter > 15) {
     int count = 0;
     if(tempcount < 5) {
-      while (count < 10) {
-        tft.setCursor(0, 0);
+      while (count < 20) {
+        tft.setCursor(0, 65);
         if(count%2 == 0) {
           tft.setTextColor(BLACK);
           tft.print("TEMP");
           tft.println();
         } else {
+          tft.setCursor(0, 65);
           tft.setTextColor(RED);
           tft.print("TEMP");
           tft.println();
         }
+        delay(50);
         count++;
       }
     } else {
-      tft.setCursor(0, 0);
+      tft.setCursor(0, 65);
       tft.setTextColor(RED);
       tft.print("TEMP");
     }
@@ -440,6 +458,15 @@ void WarningAlarm(void *task) {
       tempcount++;
     }
   }
+  } else {
+    tft.setCursor(0, 65);
+    tft.setTextColor(BLACK);
+    tft.print("TEMP");
+    ackCounter = 0;
+    recieved = 0;
+  }
+
+   
 }
 
 void vehicleComms(void* task) {
@@ -453,11 +480,23 @@ void vehicleComms(void* task) {
   press = Serial.read();
 
   if(inputCheck(press)) {
-    Serial.write(press);
-    Serial.println("Command Response");
+    Serial.println(press);
+    Serial.println("Command Response Sent");
   } else {
     Serial.print("Error: Invalid Input \n");
   }
+
+  timeMillis = millis();
+  while (millis() - timeMillis < 2000) {
+
+  }
+  press = Serial.read();
+  if(press == 116 || press == 100)
+    if(press == 116) {
+      Serial.println("k");
+    } else {
+      Serial.println("c");
+    }
 }
 
 void start() 

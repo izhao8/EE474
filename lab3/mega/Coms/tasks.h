@@ -14,7 +14,8 @@ int globalCounter, consumptionState, panelActive, tempCounter,transCounter, imag
 int pulseLength = 250;
 int distance= 0;
 unsigned short transportBuffer[8] = {0};
-int imageBuffer[16] = {0};
+double imageBuffer[16] = {0};
+double tempBuffer[16] = {0};
 unsigned long timeMillis, timeMicros, signalTime = 0;
 void powerManage(void *task0, int i);
 unsigned int convertBtoD(unsigned int *bits, int length);
@@ -26,11 +27,13 @@ void solarPanelControl(void *task);
 void powerSubsystem(void *task);
 void batteryTemperature (void *task);
 signed int optfft(signed int x[256], signed int y[256]);
-unsigned int tempBuffer(int temp);
+double tempBufferConv(int temp);
 void battTempCheck (void *task);
 void imageCapture(void* task);
 void transportDistance (void * task);
-void bufferCheck
+void bufferCheck();
+
+
 // Solar Panel Control
 void solarPanelControl(void *task)
 {
@@ -79,7 +82,7 @@ void solarPanelControl(void *task)
   Serial.println(*task0->motorDrive);
   Serial.print("PWM SIGNAL: \t");
   Serial.print(pulseLength);
-  Serial.println("us");
+  Serial.println("ms");
   Serial.println();
 }
 
@@ -119,7 +122,7 @@ void powerSubsystem(void *task)
 
  unsigned long buffer = analogRead(A13);
   *task0->batLevel = batteryBuffer(buffer);
-
+ //*task0->batLevel = 50;
   if (*task0->solarPanelState == 1)
   {
     if ((int)*task0->batLevel > 95)
@@ -130,6 +133,17 @@ void powerSubsystem(void *task)
     else
     {
       powerManage((void*) task0, 0); //powerGeneration = 0
+      Serial.println("Press any key to check temperature: ");
+      timeMillis = millis();
+      while(millis() < timeMillis + 2000) {
+
+      }
+      int press = Serial.read();
+      if (press > 0) {
+        Serial.println();
+        batteryTemperature((void *) task0);
+      }
+      
     }
   }
   else
@@ -143,27 +157,33 @@ void powerSubsystem(void *task)
 
 void batteryTemperature (void *task) {
   powerSubsystemData *task0 = (powerSubsystemData *)task;
-
+  timeMicros = micros();
+  while(micros() < timeMicros + 500) {
+    
+  }
   // Raw binary value of voltage
-  unsigned long sensorOneRaw = analogRead(A14);
-  unsigned long sensorTwoRaw = analogRead(A15);
+  double sensorOneRaw = analogRead(A14);
+  double sensorTwoRaw = analogRead(A15);
 
   // Voltage value
-  int sensorOne = tempBuffer(sensorOneRaw);
-  int sensorTwo = tempBuffer(sensorTwoRaw);
+  double sensorOne = tempBufferConv(sensorOneRaw);
+  double sensorTwo = tempBufferConv(sensorTwoRaw);
 
   // Temperature in celcius
- int sensorOneTemp = 32*sensorOne*1000 + 33;
- int sensorTwoTemp = 32*sensorTwo*1000 + 33;
+ double sensorOneTemp = 32*sensorOne + 33;
+ double sensorTwoTemp = 32*sensorTwo + 33;
 
-  task0->battTemp[tempCounter] = sensorOne;
-  task0->battTemp[tempCounter+1] = sensorTwo; 
+  *task0->battTemp1 = sensorOneTemp;
+  *task0->battTemp2 = sensorTwoTemp; 
+
+  tempBuffer[tempCounter] = sensorOneTemp;
+  tempBuffer[tempCounter+1] = sensorTwoTemp;
 
   battTempCheck((void*) task0);
 
   tempCounter += 2;
 
-  if (tempCounter >= 14) {
+  if (tempCounter >= 16) {
     tempCounter = 0;
   }
 
@@ -368,27 +388,35 @@ unsigned int batteryBuffer(int battery)
 }
 
 // Convert batter temperature from binary to voltage
-unsigned int tempBuffer(int temp) {
-  double newTemp = temp * 3.25 / 1023;
+double tempBufferConv(int temp) {
+  double newTemp = temp * 5 / 1023;
+  newTemp = newTemp * 0.65;
   return newTemp;
 }
 
 // Check battery temperature and set overheating flag
 void battTempCheck (void *task) {
   powerSubsystemData *task0 = (powerSubsystemData *)task;
-  timeMicros = micros();
-  while(micros() < timeMicros + 500) {
-  	
-  }
-  for (int i = 0; i < 15; i++) {
-    if (task0->battTemp[tempCounter] > (task0->battTemp[i] * 1.2)) {
-      *task0-> batteryOverheating = 1;
-    } else if (task0->battTemp[tempCounter+1] > (task0->battTemp[i] * 1.2)) {
-      *task0-> batteryOverheating = 1;
+  if(tempCounter == 0) {
+    if(*task0->battTemp1 > tempBuffer[14]*1.2) {
+      *task0->batteryOverheating = 1;
+    } else if (*task0->battTemp2 > tempBuffer[15]*1.2) {
+      *task0->batteryOverheating = 1;
     } else {
       *task0->batteryOverheating = 0;
-    } 
+    }
+  } else {
+    if(*task0->battTemp1 > (tempBuffer[tempCounter-2]*1.2)) {
+      *task0->batteryOverheating = 1;
+    } else if (*task0->battTemp2 > (tempBuffer[tempCounter-1]*1.2)) {
+      *task0->batteryOverheating = 1;
+    } else {
+      *task0->batteryOverheating = 0;
+    }
   }
+
+  Serial.print("Overheat: \t");
+  Serial.println(*task0->batteryOverheating);
 }
 
 // Check if any of the follownig keys were pressed
@@ -413,32 +441,24 @@ int inputCheck(int press) {
 
 void imageCapture(void* task) {
     imageCaptureData *task1 = (imageCaptureData *)task;
-    /*// Raw binary
-    for (int i = 0; i < 15; i++ ) {
-      buffer[16] = analogRead(A12);
-    }
-    int temp[256] = {0};
-    int imag[256] = {0};
-    *task1->imageDataRaw = buffer;
-    for (int i = 0; i< 16; i++) {
-      temp[i] = buffer[i];
-    }
-    //int outTemp[256] = optfft(temp, imag);
-
-    for (int i = 0; i < 15; i++ ) {
-      //*task1->imageData[i] = outTemp[i];
-    }*/
-  double real[256] = {0};
-  for(int i = 0; i < 256:i++) {
-    real[i] = (analogRead(A0)*5/1023) - 1.5;
+  int real[256], imag[256] = {0};
+  for(int i = 0; i < 256;i++) {
+    real[i] = analogRead(A12)*0.01*10 - 10;
+    imag[i] = 0;
     delayMicroseconds(100);
   }
 
-  signed int index = optfft(real, {0});
-  int N = pow(2, index);
-  *task1->imageData = 10000*index/N;
+  signed int index = optfft(real, imag);
+  *task1->imageData = 10000 * index / 200;
+  *task1->imageData = abs(*task1->imageData);  
   imageBuffer[imageCounter] = *task1->imageData;
 
+  for(int i = 0; i< 16; i++) {
+    Serial.print(imageBuffer[i]);
+    Serial.print(", ");
+  }
+  Serial.println();
+  //Serial.println(imageCounter);
   if(imageCounter >= 16) {
     imageCounter = 0;
   } else {
@@ -452,7 +472,8 @@ signed int optfft(signed int real[256], signed int imag[256]) {
 
 signed int i, i1, j, l, l1, l2, t1, t2, u;
 
-#include "tables.c"
+  #include "tables.h"
+
 
   /* Bit reversal. */
   /*Do the bit reversal */
