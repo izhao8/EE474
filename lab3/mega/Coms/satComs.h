@@ -94,7 +94,7 @@ struct imageCaptureData {
 typedef struct imageCaptureData imageCaptureData;
 
 struct transportDistanceData {
-  unsigned short* transportDist;
+  int* transportDist;
 };
 typedef struct transportDistanceData transportDistanceData;
 

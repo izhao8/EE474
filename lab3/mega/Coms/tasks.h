@@ -10,8 +10,10 @@
 //Used in random function for thruster command
 int seed = 1;
 //Used in powerManage function
-int globalCounter, consumptionState, panelActive, tempCounter, transCounter = 0;
+int globalCounter, consumptionState, panelActive, tempCounter,transCounter = 0;
 int pulseLength = 250;
+int distance= 0;
+unsigned short transportBuffer[8] = {0};
 unsigned long timeMillis, timeMicros, signalTime = 0;
 void powerManage(void *task0, int i);
 unsigned int convertBtoD(unsigned int *bits, int length);
@@ -25,7 +27,9 @@ void batteryTemperature (void *task);
 signed int optfft(signed int x[256], signed int y[256]);
 unsigned int tempBuffer(int temp);
 void battTempCheck (void *task);
-
+void imageCapture(void* task);
+void transportDistance (void * task);
+void bufferCheck();
 
 // Solar Panel Control
 void solarPanelControl(void *task)
@@ -49,14 +53,16 @@ void solarPanelControl(void *task)
   }
   if (*task0->motorDrive < 100) {
     timeMillis = millis();
+    analogWrite(45, 255);
     while(timeMillis + pulseLength < millis()) {
-      analogWrite(A13, 255);
+
     }
     timeMillis = millis();
+    analogWrite(45, 0);
     while(timeMillis + downLength < millis()) {
-      analogWrite(A13, 0);
+
     }
-    *task0->motorDrive += 10;
+    *task0->motorDrive += 1;
   } else {
     if(*task0->deploy) {
       *task0->solarPanelState = 1;
@@ -405,18 +411,23 @@ int inputCheck(int press) {
 }
 
 
-void imageCapture(*void) {
+void imageCapture(void* task) {
     imageCaptureData *task1 = (imageCaptureData *)task;
-    
+    unsigned int buffer[16];
     // Raw binary
     for (int i = 0; i < 15; i++ ) {
-      task->imageDataRaw[i] = analogRead(A12);
+      buffer[16] = analogRead(A12);
     }
-    int temp[256] = task->imageDataRaw;
-    int outTemp[256] = optfft(temp, 0);
+    int temp[256] = {0};
+    int imag[256] = {0};
+    *task1->imageDataRaw = buffer;
+    for (int i = 0; i< 16; i++) {
+      temp[i] = buffer[i];
+    }
+    //int outTemp[256] = optfft(temp, imag);
 
     for (int i = 0; i < 15; i++ ) {
-      task->imageData[i] = outTemp[i];
+      //*task1->imageData[i] = outTemp[i];
     }
 }
 
@@ -478,31 +489,56 @@ signed int i, i1, j, l, l1, l2, t1, t2, u;
   return (j);
 }
 
-void transportDistance (*void) {
-  transportDistancData *task0 = (transportDistancData *)task;
+void transportDistance (void * task) {
+  transportDistanceData *task0 = (transportDistanceData *)task;
   int duration = floor(pulseIn(A12, HIGH)); //Reads a pulse and returns it in microseconds
 
   // At 35Hz, duration = 2857 us (micro)
   // At 3.75kHz, duration = 27 us
 
   // Then convert that to meters
- short distance = floor(0.671378 * duration); 
-
-if(transCounter == 0) {
-  if(task0->transportDist[7]*1.1 < distance) {
-    task0->transportDist[transCounter] = distance;
-  }
-} else{
-  if(task0->transportDist[transCounter-1]*1.1 < distance) {
-    task0->transportDist[transCounter] = distance;
-  }
+ distance = floor(0.671378 * duration); 
+ if(distance > 2000) {
+  distance = 2000;
+ } else if (distance < 100){
+  distance = 100;
+ }
+ *task0->transportDist = distance;
+ bufferCheck();
 }
 
-  if (transCounter >= 7) {
-    transCounter = 0;
+
+void bufferCheck() {
+  int difference = 0;
+  if(transCounter == 0) {
+    difference = transportBuffer[7]-distance;
   } else {
-    transCounter++;
+    difference = transportBuffer[transCounter - 1]-distance;
   }
+  difference = abs(difference);
+  if(transCounter == 0) {
+    if (difference > (transportBuffer[7] * 0.1)){
+      Serial.println("first");
+      transportBuffer[transCounter] = distance;
 
-}
+      if(transCounter >= 7) {
+        transCounter = 0;
+      } else {
+        transCounter++;
+      }
 
+    } 
+  }else {
+      if (difference > (transportBuffer[transCounter-1] * 0.1)){
+        Serial.println("got here");
+        transportBuffer[transCounter] = distance;
+
+        if(transCounter >= 7) {
+          transCounter = 0;
+        } else {
+          transCounter++;
+        }
+
+      }
+    }
+  }

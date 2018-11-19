@@ -31,7 +31,7 @@ void vehicleComms(void* task);
 void start();
 void insertNode(uintptr_t address);
 void deleteNode(uintptr_t address);
-
+void bufferCheck();
 
 int startup = 1;
 int userInput = 1;
@@ -58,7 +58,7 @@ int fuelcount, batcount, tempcount, recieved = 0;
   int batteryOverheating = 0;
   unsigned int imageDataRaw[8] = {0};
   unsigned int imageData[8] = {0};
-  unsigned short transportDist[8] = {0};
+  int transportDist = 0;
   /*
   initialize structs for all subsystems (task order tbd)
   */
@@ -191,10 +191,10 @@ void setup() {
   image->myTask = &imageCapture;
   image->priority = 3;
 
-  task9->transportDist = transportDist;
+  task9->transportDist = &transportDist;
   transport->taskData = &task9;
   transport->myTask = transportDistance;
-  image->priority = 3;
+  transport->priority = 3;
 
 
  Serial.println(F("TFT LCD test"));
@@ -250,14 +250,30 @@ void setup() {
 }
 
 void loop() { 
-  if(deploy || retract) {
+/*  if(deploy || retract) {
     head = solarPanel;
     tail = keypad;
   } else {
     head = power;
     tail = vehicle;
   }
-  scheduler();
+  scheduler();*/
+  //solarPanel->myTask(solarPanel->taskData);
+/*  transport->myTask(transport->taskData);
+  bufferCheck();
+  for(int i = 0; i< 8; i++) {
+    Serial.print(transportBuffer[i]);
+    Serial.print(", ");
+  }
+  Serial.println();
+  delay(3000);*/
+
+/*  analogWrite(45,255);
+  delay(250);
+  analogWrite(45, 0);
+  delay(1000);*/
+
+
 }
 
 void scheduler() {
@@ -340,7 +356,7 @@ void WarningAlarm(void *task) {
  
   if(*task4->batteryOverheating) {
     tft.setTextColor(RED);
-    tft.print("TEMPERATURE");
+    tft.print("TEMP");
     timeMillis = millis();
     if(!recieved) {
       while((millis() < timeMillis + 15000)) {
@@ -405,18 +421,21 @@ void WarningAlarm(void *task) {
         tft.setCursor(0, 0);
         if(count%2 == 0) {
           tft.setTextColor(BLACK);
-          tft.print("TEMPERATURE");
+          tft.print("TEMP");
+          tft.println();
         } else {
           tft.setTextColor(RED);
-          tft.print("TEMPERATURE");
+          tft.print("TEMP");
+          tft.println();
         }
         count++;
       }
     } else {
       tft.setCursor(0, 0);
       tft.setTextColor(RED);
-      tft.print("TEMPERATURE");
+      tft.print("TEMP");
     }
+
     if (tempcount >= 10) {
       tempcount = 0;
     } else {
@@ -463,24 +482,25 @@ void start()
   solarPanel->prev = NULL;
   keypad->next = NULL;
   keypad->prev = solarPanel;
+
+  pinMode(45, OUTPUT);
 }
 
 void insertNode(uintptr_t address)
 {
- TCB* node = (TCB*) address;
- if(NULL == head) // If the head pointer is pointing to nothing
- {
- head = node; // set the head and tail pointers to point to this node
- tail = node;
- }
-else // otherwise, head is not NULL, add the node to the end of the list
-{
- tail -> next = node;
- node -> prev = tail; // note that the tail pointer is still pointing
- // to the prior last node at this point
- tail = node; // update the tail pointer
-}
- return;
+   TCB* node = (TCB*) address;
+   if(NULL == head) // If the head pointer is pointing to nothing
+   {
+   head = node; // set the head and tail pointers to point to this node
+   tail = node;
+   } else // otherwise, head is not NULL, add the node to the end of the list
+  {
+   tail -> next = node;
+   node -> prev = tail; // note that the tail pointer is still pointing
+   // to the prior last node at this point
+   tail = node; // update the tail pointer
+  }
+   return;
 } 
 
 void deleteNode(uintptr_t address)
@@ -523,3 +543,38 @@ void deleteNode(uintptr_t address)
   //formally deletes the node from memory
   free(current);
 }
+
+/*void bufferCheck() {
+  int difference = 0;
+  if(transCounter == 0) {
+    difference = transportBuffer[7]-transportDist;
+  } else {
+    difference = transportBuffer[transCounter - 1]-transportDist;
+  }
+  difference = abs(difference);
+  if(transCounter == 0) {
+    if (difference > (transportBuffer[7] * 0.1)){
+      Serial.println("first");
+      transportBuffer[transCounter] = transportDist;
+
+      if(transCounter >= 7) {
+        transCounter = 0;
+      } else {
+        transCounter++;
+      }
+
+  	} 
+  }else {
+      if (difference > (transportBuffer[transCounter-1] * 0.1)){
+        Serial.println("got here");
+        transportBuffer[transCounter] = transportDist;
+
+        if(transCounter >= 7) {
+          transCounter = 0;
+        } else {
+          transCounter++;
+        }
+
+      }
+    }
+  }*/
