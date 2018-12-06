@@ -335,8 +335,70 @@ unsigned int *convertDtoB(int dec)
     command[i] = (dec >> i) & 1;
   }
   return command;
-}// Test val 1023 == batteryLevel: 100
-// unsigned long buffer = 1023;
+}
+
+// Lab 5 Additions (CHANGE task0 to whatever task we need the function to be inside of)
+
+/*
+The system shall be capable of detecting any obstacles that appear in front of the satellite.
+When an alien pirate vehicle, cloaked or uncloaked, appears within 100 meters of the
+satellite, a detected flag shall be set signifying that the pirateManagement task should be
+scheduled.
+
+Once detected, as long as the alien vehicle remains in range, the detection task shall
+provide proximity data to the Pirate Management subsystem.
+*/
+void pirateDetection (void *task) {
+  pirateDetectionSubsystemData *task0 = (pirateDetectionSubsystemData *)task;
+
+
+  int frequency = analogRead(A13);
+  int voltage = frequency * 5/1023
+  int distance = voltage * 100;
+
+  if (distance <= 100) {
+    task0->piratesDetected = 1;
+    // pirateManagment(*task);
+  } else {
+    task0-> piratesDetected = 0;
+  }
+
+}
+
+
+/*
+The system shall be capable of managing any alien vehicles that appear in front of the
+satellite by first releasing a blast of phasor fire then a barrage photon torpedoes if the
+obstacle remains intact.
+The management system shall operate as follows.
+
+If the pirateProximity is within 30 meters, the phasor subsystem is enabled and the
+communications officer can fire phasors at will.
+
+If the pirateProximity is within 5 meters, the photon subsystem is enabled and the
+communications officer can fire photons at will – or any other obstacle that might be
+interfering with the satellite’s progress.
+
+The Pirate Management subsystem shall fire one phasor burst or one photon torpedo
+at a time in response to each command. 
+*/
+void pirateManagment (void *task) {
+  pirateDiscouragementSubsystemData *task0 = (pirateDiscouragementSubsystemData *)task;
+
+  
+  
+}
+
+// USER SPECIFIED TASK
+/* 
+void blahBlah (void *task) {
+  
+} 
+*/
+
+
+
+// Helper Functions 
 
 unsigned int convertBtoD(unsigned int *bits, int length)
 {
@@ -434,7 +496,21 @@ int inputCheck(int press) {
     return 1;
   } else if(press == 104) {
     return 1;
-  } else {
+  } 
+
+  // Lab 5 additions:
+   else if(press == 115) {  // s
+    return 1;
+  } else if(press == 105) { // i
+    return 1;
+  } else if(press == 119) { // w
+    return 1;                     // These two need a response of "A" (97)
+  } else if(press == 112) { // p
+    return 1;
+  } 
+
+
+  else {
     return 0;
   }
 }
@@ -578,3 +654,5 @@ void bufferCheck() {
       }
     }
   }
+
+

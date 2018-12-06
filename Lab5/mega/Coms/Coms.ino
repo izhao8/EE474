@@ -503,6 +503,80 @@ void vehicleComms(void* task) {
     }
 }
 
+/*
+The task shall be scheduled whenever a command has been received by the system or
+when an outgoing message must be formatted in preparation for transmission to the
+remote computer. 
+
+After the message has been interpreted and verified as correct or an outgoing message has
+been built and forwarded to the SatelliteComms task, the Command task shall be deleted.
+*/
+
+void command(void* task) {
+
+  // Change task number to whatever it should be
+  commandManagementData *task0 = (commandManagementData *)task;
+
+  int press = 0;
+  timeMillis = millis();
+  while (millis() - timeMillis < 2000) {
+
+  }
+
+  Serial.println();
+  press = Serial.read();
+
+  int responseA = 97; // Recieved response "a"
+
+  if (recievingCommand) {
+
+    // The correct response was recieved
+    if (responseA) {
+
+      task1->errorRecieved = ""; // No error message sent
+
+      // Start measurement tasks
+      if(press == 115) {
+        
+      } 
+
+      // Stop measurement data collection tasks
+      else if(press == 112) {
+        
+      } 
+
+      // Display console
+      else if(press == 100) {
+        
+      } 
+
+      // Transmit data
+      else if(press == 116) {
+        
+      } 
+
+      // Most eecent vals
+      else if(press == 109) {
+        
+      } 
+    } else {
+      Serial.print("Error: invalid command recieved \n");
+
+      // Send message to satComs
+      task1-> erroRecieved = "Error: invalid command recieved";
+    }
+
+  } 
+
+  // Transmitting command 
+  else {
+    // Create a message?
+    // char message = "there are no strings in C so we have to make a char array...";
+    // task1->messageRecieved = message;
+  }
+
+}
+
 void start() 
 {
   head = power;
