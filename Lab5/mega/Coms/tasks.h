@@ -17,21 +17,23 @@ unsigned short transportBuffer[8] = {0};
 double imageBuffer[16] = {0};
 double tempBuffer[16] = {0};
 unsigned long timeMillis, timeMicros, signalTime = 0;
-void powerManage(void *task0, int i);
-unsigned int convertBtoD(unsigned int *bits, int length);
-unsigned int *convertDtoB(int dec);
-int randomInteger(int low, int high);
-unsigned int batteryBuffer(int battery);
-void consoleKeyPad(void *task);
-void solarPanelControl(void *task);
-void powerSubsystem(void *task);
-void batteryTemperature (void *task);
-signed int optfft(signed int x[256], signed int y[256]);
-double tempBufferConv(int temp);
-void battTempCheck (void *task);
-void imageCapture(void* task);
-void transportDistance (void * task);
-void bufferCheck();
+  void powerManage(void *task0, int i);
+  unsigned int convertBtoD(unsigned int *bits, int length);
+  unsigned int *convertDtoB(int dec);
+  int randomInteger(int low, int high);
+  unsigned int batteryBuffer(int battery);
+  void consoleKeyPad(void *task);
+  void solarPanelControl(void *task);
+  void powerSubsystem(void *task);
+  void batteryTemperature (void *task);
+  signed int optfft(signed int x[256], signed int y[256]);
+  double tempBufferConv(int temp);
+  void battTempCheck (void *task);
+  void imageCapture(void* task);
+  void transportDistance (void * task);
+  void bufferCheck();
+  void pirateManagment (void *task);
+  void pirateDetection (void *task);
 
 
 // Solar Panel Control
@@ -319,12 +321,16 @@ void thrusterSubsystem(void *task)
     mag = 0;
   }
 }
-
-void satelliteComs(void *task)
-{
+/*
+void satelliteComs(void *task) {
   satelliteComsData *task2 = (satelliteComsData *)task;
-  *task2->thrusterCommand = (unsigned int)randomInteger(-10, 10);
-}
+  if(thrust) {
+    *task2->thrusterCommand = (unsigned int)randomInteger(-10, 10);
+    thrust = 0;
+  }
+  
+
+}*/
 
 unsigned int *convertDtoB(int dec)
 {
@@ -350,17 +356,14 @@ provide proximity data to the Pirate Management subsystem.
 */
 void pirateDetection (void *task) {
   pirateDetectionSubsystemData *task0 = (pirateDetectionSubsystemData *)task;
-
-
-  int frequency = analogRead(A13);
-  int voltage = frequency * 5/1023
-  int distance = voltage * 100;
+  double frequency = analogRead(A13);
+  double voltage = frequency * 5/1023;
+  double distance = voltage * 20;
 
   if (distance <= 100) {
-    task0->piratesDetected = 1;
-    // pirateManagment(*task);
+    *task0->piratesDetected = 1;
   } else {
-    task0-> piratesDetected = 0;
+    *task0-> piratesDetected = 0;
   }
 
 }
@@ -385,8 +388,17 @@ at a time in response to each command.
 void pirateManagment (void *task) {
   pirateDiscouragementSubsystemData *task0 = (pirateDiscouragementSubsystemData *)task;
 
+  if(*task0->piratesDetected <= 30) {
+    *task0->pirateProximity = 1;
+  } else if (*task0->piratesDetected <= 5) {
+    *task0->pirateProximity = 2;
+  }
   
-  
+  if(*task0->pirateProximity == 1) {
+    Serial.println("Firing Phasors!");
+  } else if (*task0->pirateProximity == 2) {
+    Serial.println("Firing Photons!");
+  }
 }
 
 // USER SPECIFIED TASK
@@ -517,7 +529,7 @@ int inputCheck(int press) {
 
 
 void imageCapture(void* task) {
-    imageCaptureData *task1 = (imageCaptureData *)task;
+  imageCaptureData *task1 = (imageCaptureData *)task;
   int real[256], imag[256] = {0};
   for(int i = 0; i < 256;i++) {
     real[i] = analogRead(A12)*0.01*10 - 10;

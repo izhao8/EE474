@@ -32,11 +32,16 @@ void start();
 void insertNode(uintptr_t address);
 void deleteNode(uintptr_t address);
 void bufferCheck();
+void commandManagement(void* task);
+void satelliteComs(void *task);
+void satDisplay();
 
 int startup = 1;
 int userInput = 1;
 int fuelcount, batcount, tempcount, ackCounter = 0;
+int measure, display, thrust = 0;
 int recieved, ack = 1;
+
   /*
   initialize ALL the variables for the structs as global
   */
@@ -59,6 +64,9 @@ int recieved, ack = 1;
   int batteryOverheating = 0;
   double imageData = 0;
   int transportDist = 0;
+  int piratesDetected = 0;
+  short pirateProximity = 0;
+  int msg = 0;
   /*
   initialize structs for all subsystems (task order tbd)
   */
@@ -82,6 +90,12 @@ int recieved, ack = 1;
     malloc(sizeof(imageCaptureData));
   transportDistanceData* task9 = (transportDistanceData*)
     malloc(sizeof(transportDistanceData));
+  commandManagementData* task10 = (commandManagementData*)
+    malloc(sizeof(transportDistanceData));
+  pirateDetectionSubsystemData* task11 = (pirateDetectionSubsystemData*)
+    malloc(sizeof(pirateDetectionSubsystemData));
+  pirateDiscouragementSubsystemData* task12 = (pirateDiscouragementSubsystemData*)
+    malloc(sizeof(pirateDiscouragementSubsystemData));
 
 /*
 initialize structs for task control board (TCB)
@@ -96,6 +110,9 @@ TCB *vehicle = (TCB *)malloc(sizeof(TCB));
 TCB *keypad = (TCB *)malloc(sizeof(TCB));
 TCB *image = (TCB *)malloc(sizeof(TCB));
 TCB *transport = (TCB *)malloc(sizeof(TCB));
+TCB *RxTx = (TCB *)malloc(sizeof(TCB));
+TCB *detect = (TCB *)malloc(sizeof(TCB));
+TCB *fire = (TCB *)malloc(sizeof(TCB));
 
 TCB *head = (TCB *)malloc(sizeof(TCB));
 TCB *tail = (TCB *)malloc(sizeof(TCB));
@@ -135,6 +152,7 @@ void setup() {
   task2->pwrCon = &pwrCon;
   task2->pwrGen = &pwrGen;
   task2->thrusterCommand = &thusterCommand;
+  task2->msg = &msg;
   satellite->taskData = task2;
   satellite->myTask = &satelliteComs;
   satellite->priority = 3;
@@ -160,6 +178,7 @@ void setup() {
   task4->batLevel = &batLevel;
   task4->fuelLevel = &fuelLevel;
   task4->batteryOverheating = &batteryOverheating;
+  task4->piratesDetected = &piratesDetected;
   warning->taskData = task4;
   warning->myTask = &WarningAlarm;
   warning->priority = 5;
@@ -195,6 +214,22 @@ void setup() {
   transport->taskData = task9;
   transport->myTask = transportDistance;
   transport->priority = 3;
+
+  task10->msg = &msg;
+  RxTx->taskData = task10;
+  RxTx->myTask = commandManagement;
+  RxTx->priority = 4;
+
+  task11->piratesDetected = &piratesDetected;
+  detect->taskData = task11;
+  detect->myTask = pirateDetection;
+  detect->priority = 1;
+
+  task12->piratesDetected = &piratesDetected;
+  task12->pirateProximity = &pirateProximity;
+  fire->taskData = task12;
+  fire->myTask = pirateManagement;
+  fire->priority = 5;
 
 
  Serial.println(F("TFT LCD test"));
@@ -292,20 +327,10 @@ void scheduler() {
     }
   }
 
-  Serial.print("Image Capture?");
-  time = millis();
-  while(millis() - time < 1000){
-
-  }
-  int press = Serial.read();
-  if (press > 0){
-    image->myTask(image->taskData);
-  }
   globalCounter++;
 }
 
-void consoleDisplay(void *task)
-{
+void consoleDisplay(void *task) {
   //Normal satellite status
   consoleDisplayData *task3 = (consoleDisplayData *)task;
   Serial.print("BATTERY LEVEL: \t\t");
@@ -358,16 +383,14 @@ void consoleDisplay(void *task)
   }
   Serial.print("TRANSPORT DISTANCE: \t");
   Serial.println(*task9->transportDist);
-  Serial.print("TEMPERATUR: \t");
+  Serial.print("TEMPERATURE: \t");
   Serial.println(*task3->battTemp);
-
 }
 
 void WarningAlarm(void *task) {
   warningAlarmData *task4 = (warningAlarmData *)task;
  tft.setCursor(0, 0);
- tft.setTextSize(4);
- 
+ tft.setTextSize(1);
  
  if(*task4->batLevel <= 10) {
    if(batcount >= 2){
@@ -469,8 +492,6 @@ void WarningAlarm(void *task) {
     ackCounter = 0;
     recieved = 0;
   }
-
-   
 }
 
 void vehicleComms(void* task) {
@@ -512,73 +533,120 @@ After the message has been interpreted and verified as correct or an outgoing me
 been built and forwarded to the SatelliteComms task, the Command task shall be deleted.
 */
 
-void command(void* task) {
-
-  // Change task number to whatever it should be
+void commandManagement(void* task) {
   commandManagementData *task0 = (commandManagementData *)task;
 
-  int press = 0;
-  timeMillis = millis();
-  while (millis() - timeMillis < 2000) {
-
-  }
-
-  Serial.println();
-  press = Serial.read();
-
-  int responseA = 97; // Recieved response "a"
-
-  if (recievingCommand) {
-
-    // The correct response was recieved
-    if (responseA) {
-
-      task1->errorRecieved = ""; // No error message sent
-
-      // Start measurement tasks
-      if(press == 115) {
-        
-      } 
-
-      // Stop measurement data collection tasks
-      else if(press == 112) {
-        
-      } 
-
-      // Display console
-      else if(press == 100) {
-        
-      } 
-
-      // Transmit data
-      else if(press == 116) {
-        
-      } 
-
-      // Most eecent vals
-      else if(press == 109) {
-        
-      } 
-    } else {
-      Serial.print("Error: invalid command recieved \n");
-
-      // Send message to satComs
-      task1-> erroRecieved = "Error: invalid command recieved";
-    }
-
+  int press = *task0->msg;
+  int error = 0;
+  if(press == 115) {
+    measure = 1;
   } 
-
-  // Transmitting command 
-  else {
-    // Create a message?
-    // char message = "there are no strings in C so we have to make a char array...";
-    // task1->messageRecieved = message;
+  // Stop measurement data collection tasks
+  else if(press == 112) {
+    measure = 0;
+  } 
+  // Display console
+  else if(press == 100) {
+    if(measure) {
+      measure = 0;
+    } else {
+      measure = 1;
+    }
+  } 
+  // Thruster
+  else if(press == 116) {
+    thrust = 1; //basically calls satelliteComs function
+  } 
+  // Most recent vals
+  else if(press == 109) {
+    // I'm assuming it means recent imageData
+    tft.print("IMAGE DATA: \t");
+    tft.println(imageData);        
+  } else {
+    error = 1;
   }
-
+  if(error) {
+    tft.println("E");
+    tft.println("Command Not Found");
+  } else {
+    tft.println("A");
+    tft.println("Command Recieved");
+  }
+  
 }
 
-void start() 
-{
+void satelliteComs(void *task) {
+  satelliteComsData *task2 = (satelliteComsData *)task;
+  timeMillis = millis();
+  while (millis() - timeMillis < 1500 && Serial.read() == 0) {
+
+  }
+  *task2->msg = Serial.read(); 
+  RxTx->myTask(RxTx->taskData);
+  if(thrust) {
+    *task2->thrusterCommand = (unsigned int)randomInteger(-10, 10);
+    thrust = 0;
+  }
+  if(display) {
+    satDisplay();
+  }
+}
+
+void satDisplay(){
+  tft.print("SATELLITE: \t");
+  tft.println("15 Hundred Shades of C");
+  tft.println("DATE: \t");
+  tft.println("12/10/2018");
+  tft.print("OPERATOR: \t");
+  tft.println("ABCDE");
+  tft.print("BATTERY LEVEL: \t\t");
+  if(*task3->batLevel > 100 || *task3->batLevel < 0) {
+    tft.println("0\n");
+  } else {
+    tft.println(*task3->batLevel);
+  }
+  tft.print("FUEL LEVEL: \t\t");
+  tft.println(*task3->fuelLevel);
+  tft.print("POWER CONSUMPTION: \t");
+  tft.println(*task3->pwrCon);
+  tft.print("POWER GENERATION: \t");
+  tft.println(*task3->pwrGen);
+  tft.print("CHARGING STATUS: \t");
+  if (*task3->solarPanelState) {
+    tft.println("ON");
+    tft.println();
+  } else {
+   tft.println("OFF");
+   tft.println();
+  } 
+  //Annunciation mode
+  if (*task3->batLevel < 50)
+  {
+    *task3->batLow = 1;
+    tft.println("BATTERY LOW");
+  }
+  else
+  {
+    *task3->batLow = 0;
+  }
+  if (*task3->fuelLevel < 50)
+  {
+    *task3->fuelLow = 1;
+    tft.println("Fuel LOW");
+  }
+  else
+  {
+    *task3->fuelLow = 0;
+  }
+  tft.print("TRANSPORT DISTANCE: \t");
+  tft.println(*task9->transportDist);
+  tft.print("TEMPERATURE: \t");
+  tft.println(*task3->battTemp);
+  tft.print("IMAGE DATA: \t");
+  tft.println(imageData);
+}
+
+void start() {
   head = power;
   power->next = thruster;
   thruster->next = satellite;
@@ -601,21 +669,18 @@ void start()
   pinMode(45, OUTPUT);
 }
 
-void insertNode(uintptr_t address)
-{
-   TCB* node = (TCB*) address;
-   if(NULL == head) // If the head pointer is pointing to nothing
-   {
+void insertNode(uintptr_t address){
+ TCB* node = (TCB*) address;
+ if(NULL == head) // If the head pointer is pointing to nothing
+ {
    head = node; // set the head and tail pointers to point to this node
    tail = node;
-   } else // otherwise, head is not NULL, add the node to the end of the list
-  {
+ } else{ // otherwise, head is not NULL, add the node to the end of the list
    tail -> next = node;
    node -> prev = tail; // note that the tail pointer is still pointing
-   // to the prior last node at this point
+ // to the prior last node at this point
    tail = node; // update the tail pointer
   }
-   return;
 } 
 
 void deleteNode(uintptr_t address)
@@ -659,37 +724,3 @@ void deleteNode(uintptr_t address)
   free(current);
 }
 
-/*void bufferCheck() {
-  int difference = 0;
-  if(transCounter == 0) {
-    difference = transportBuffer[7]-transportDist;
-  } else {
-    difference = transportBuffer[transCounter - 1]-transportDist;
-  }
-  difference = abs(difference);
-  if(transCounter == 0) {
-    if (difference > (transportBuffer[7] * 0.1)){
-      Serial.println("first");
-      transportBuffer[transCounter] = transportDist;
-
-      if(transCounter >= 7) {
-        transCounter = 0;
-      } else {
-        transCounter++;
-      }
-
-  	} 
-  }else {
-      if (difference > (transportBuffer[transCounter-1] * 0.1)){
-        Serial.println("got here");
-        transportBuffer[transCounter] = transportDist;
-
-        if(transCounter >= 7) {
-          transCounter = 0;
-        } else {
-          transCounter++;
-        }
-
-      }
-    }
-  }*/

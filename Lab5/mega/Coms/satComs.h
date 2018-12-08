@@ -38,8 +38,7 @@ struct satelliteComsData {
   unsigned short* pwrCon;
   unsigned short* pwrGen;
   unsigned int* thrusterCommand;
-  char* errorRecieved; // <---------------------------------- NEW
-  char* messageRecieved; // <---------------------------------- NEW
+  int* msg;
 };
 typedef struct satelliteComsData satelliteComsData;
 
@@ -63,7 +62,7 @@ struct warningAlarmData {
   unsigned int* batLevel;
   unsigned short* fuelLevel;
   int* batteryOverheating;
-  int* alienDetected; // <---------------------------------- NEW
+  int* piratesDetected; // <---------------------------------- NEW
 };
 typedef struct warningAlarmData warningAlarmData;
 
@@ -104,8 +103,7 @@ typedef struct transportDistanceData transportDistanceData;
 // NEW STRUCTS FOR LAB 5
 
 struct commandManagementData {
-  char* command;
-  char* response;
+  int* msg;
 
   // What if these were made into ints instead of chars? 
   // Do we need to store the actual letter sent or could we just store the ASCII value?
@@ -120,7 +118,8 @@ typedef struct pirateDetectionSubsystemData pirateDetectionSubsystemData;
 
 
 struct pirateDiscouragementSubsystemData {
-  // ADD Pointers to Variables HERE
+  int* piratesDetected;
+  short* pirateProximity;
 };
 typedef struct pirateDiscouragementSubsystemData pirateDiscouragementSubsystemData;
 
