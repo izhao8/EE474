@@ -408,13 +408,6 @@ void pirateManagment (void *task) {
   }
 }
 
-// USER SPECIFIED TASK
-/* 
-void blahBlah (void *task) {
-  
-} 
-*/
-
 
 
 // Helper Functions 

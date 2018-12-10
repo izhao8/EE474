@@ -35,6 +35,7 @@ void bufferCheck();
 void commandManagement(int press);
 void satelliteComs(void *task);
 void satDisplay();
+void calculator();
 
 int startup = 1;
 int userInput = 1;
@@ -118,6 +119,7 @@ TCB *head = (TCB *)malloc(sizeof(TCB));
 TCB *tail = (TCB *)malloc(sizeof(TCB));
 
 void setup() {
+
   // put your setup code here, to run once:
   Serial1.begin(9600);
   Serial.begin(9600);
@@ -286,35 +288,7 @@ void setup() {
 }
 
 void loop() { 
-  // if(deploy || retract) {
-  //   head = solarPanel;
-  //   tail = keypad;
-  // } else {
-  //   head = power;
-  //   tail = vehicle;
-  // }
-  // scheduler();
-
-satellite->myTask(detect->taskData);
-delay(1000);
-warning->myTask(warning->taskData);
-delay(1000);
-
-  //solarPanel->myTask(solarPanel->taskData);
-/*  transport->myTask(transport->taskData);
-  bufferCheck();
-  for(int i = 0; i< 8; i++) {
-    Serial.print(transportBuffer[i]);
-    Serial.print(", ");
-  }
-  Serial.println();
-  delay(3000);*/
-
-/*  analogWrite(45,255);
-  delay(250);
-  analogWrite(45, 0);
-  delay(1000);
-  */
+  scheduler();
 }
 
 void scheduler() {
@@ -341,7 +315,7 @@ void scheduler() {
 
     }
   }
-
+  calculator();
   globalCounter++;
 }
 
@@ -512,6 +486,7 @@ void WarningAlarm(void *task) {
 void vehicleComms(void* task) {
   vehicleCommsData* task5 = (vehicleCommsData*) task;
   int press = 0;
+  Serial.println("vehicle");
   timeMillis = millis();
   while (millis() - timeMillis < 1000) {
 
@@ -539,14 +514,6 @@ void vehicleComms(void* task) {
     }
 }
 
-/*
-The task shall be scheduled whenever a command has been received by the system or
-when an outgoing message must be formatted in preparation for transmission to the
-remote computer. 
-
-After the message has been interpreted and verified as correct or an outgoing message has
-been built and forwarded to the SatelliteComms task, the Command task shall be deleted.
-*/
 
 void commandManagement(int press) {
   int error = 0;
@@ -749,4 +716,35 @@ void deleteNode(uintptr_t address)
   //formally deletes the node from memory
   free(current);
 }
+
+void calculator() {
+  Serial.println("Enable Calculator?");
+  int time = millis();
+  while(millis() - time < 1000){
+
+  }
+  int press = Serial.read();
+  Serial.println();
+  if (press > 0) {
+    tft.fillScreen(BLACK);
+    tft.setCursor(0,0);
+    tft.setTextSize(1);
+    tft.setTextColor(WHITE);
+    int input = 0;
+
+    while(input != 101) {
+      tft.fillScreen(BLACK);
+      tft.setCursor(0,0);
+      tft.println("CALCULATOR MODE ENABLED:");
+      calc();
+      Serial.println();
+      Serial.println("Press e to exit:");
+      delay(2000);
+      input = Serial.read();
+    }
+    tft.fillScreen(BLACK);
+  }
+}
+
+
 

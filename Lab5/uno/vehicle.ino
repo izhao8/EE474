@@ -1,4 +1,4 @@
-int inputCheck(int press) 
+int inputCheck(int press);
 char data;
 void setup() {
 	Serial.begin(9600);
