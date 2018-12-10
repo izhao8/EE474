@@ -118,9 +118,9 @@ void powerSubsystem(void *task)
 
   }
 
-// Battery Level set by DC power supply
-// PIN 18 TX1: Transmit serial data
-// PIN 19 RX1: Receive serial data
+  // Battery Level set by DC power supply
+  // PIN 18 TX1: Transmit serial data
+  // PIN 19 RX1: Receive serial data
 
  unsigned long buffer = analogRead(A13);
  // *task0->batLevel = batteryBuffer(buffer);
@@ -137,7 +137,7 @@ void powerSubsystem(void *task)
       powerManage((void*) task0, 0); //powerGeneration = 0
       Serial.println("Press any key to check temperature: ");
       timeMillis = millis();
-      while(millis() < timeMillis + 2000) {
+      while(millis() < timeMillis + 1000) {
 
       }
       int press = Serial.read();
@@ -356,16 +356,30 @@ provide proximity data to the Pirate Management subsystem.
 */
 void pirateDetection (void *task) {
   pirateDetectionSubsystemData *task0 = (pirateDetectionSubsystemData *)task;
-  double frequency = analogRead(A13);
+  double frequency = analogRead(A15);
   double voltage = frequency * 5/1023;
-  double distance = voltage * 20;
-
+  double distance = voltage * 100;
+  Serial.println(distance);
+  *task0->pirateProximity = distance;
   if (distance <= 100) {
     *task0->piratesDetected = 1;
   } else {
     *task0-> piratesDetected = 0;
   }
+  Serial.println(*task0->piratesDetected);
 
+  if(*task0->piratesDetected) {
+    int time = millis();
+    int press = 0;
+    Serial.println("Fire?");
+    while(millis() < time + 1000) {
+
+    }
+    press = Serial.read();
+    if(press > 0) {
+      pirateManagment((void*) task0);
+    }
+  }
 }
 
 
@@ -387,16 +401,9 @@ at a time in response to each command.
 */
 void pirateManagment (void *task) {
   pirateDiscouragementSubsystemData *task0 = (pirateDiscouragementSubsystemData *)task;
-
-  if(*task0->piratesDetected <= 30) {
-    *task0->pirateProximity = 1;
-  } else if (*task0->piratesDetected <= 5) {
-    *task0->pirateProximity = 2;
-  }
-  
-  if(*task0->pirateProximity == 1) {
+  if(*task0->pirateProximity <= 100 && *task0->pirateProximity > 30) {
     Serial.println("Firing Phasors!");
-  } else if (*task0->pirateProximity == 2) {
+  } else if (*task0->pirateProximity <= 30) {
     Serial.println("Firing Photons!");
   }
 }

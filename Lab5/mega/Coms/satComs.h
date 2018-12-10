@@ -113,13 +113,14 @@ typedef struct commandManagementData commandManagementData;
 
 struct pirateDetectionSubsystemData {
   int* piratesDetected;
+  double* pirateProximity;
 };
 typedef struct pirateDetectionSubsystemData pirateDetectionSubsystemData;
 
 
 struct pirateDiscouragementSubsystemData {
   int* piratesDetected;
-  short* pirateProximity;
+  double* pirateProximity;
 };
 typedef struct pirateDiscouragementSubsystemData pirateDiscouragementSubsystemData;
 

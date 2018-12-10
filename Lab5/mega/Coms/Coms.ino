@@ -32,7 +32,7 @@ void start();
 void insertNode(uintptr_t address);
 void deleteNode(uintptr_t address);
 void bufferCheck();
-void commandManagement(void* task);
+void commandManagement(int press);
 void satelliteComs(void *task);
 void satDisplay();
 
@@ -65,7 +65,7 @@ int recieved, ack = 1;
   double imageData = 0;
   int transportDist = 0;
   int piratesDetected = 0;
-  short pirateProximity = 0;
+  double pirateProximity = 0;
   int msg = 0;
   /*
   initialize structs for all subsystems (task order tbd)
@@ -91,7 +91,7 @@ int recieved, ack = 1;
   transportDistanceData* task9 = (transportDistanceData*)
     malloc(sizeof(transportDistanceData));
   commandManagementData* task10 = (commandManagementData*)
-    malloc(sizeof(transportDistanceData));
+    malloc(sizeof(commandManagementData));
   pirateDetectionSubsystemData* task11 = (pirateDetectionSubsystemData*)
     malloc(sizeof(pirateDetectionSubsystemData));
   pirateDiscouragementSubsystemData* task12 = (pirateDiscouragementSubsystemData*)
@@ -215,20 +215,21 @@ void setup() {
   transport->myTask = transportDistance;
   transport->priority = 3;
 
-  task10->msg = &msg;
+  task10->msg = *task2->msg;
   RxTx->taskData = task10;
-  RxTx->myTask = commandManagement;
+  RxTx->myTask = &commandManagement;
   RxTx->priority = 4;
 
   task11->piratesDetected = &piratesDetected;
+  task11->pirateProximity = &pirateProximity;
   detect->taskData = task11;
-  detect->myTask = pirateDetection;
+  detect->myTask = &pirateDetection;
   detect->priority = 1;
 
   task12->piratesDetected = &piratesDetected;
   task12->pirateProximity = &pirateProximity;
   fire->taskData = task12;
-  fire->myTask = pirateManagement;
+  fire->myTask = &pirateManagment;
   fire->priority = 5;
 
 
@@ -294,7 +295,9 @@ void loop() {
   // }
   // scheduler();
 
-image->myTask(image->taskData);
+satellite->myTask(detect->taskData);
+delay(1000);
+warning->myTask(warning->taskData);
 delay(1000);
 
   //solarPanel->myTask(solarPanel->taskData);
@@ -317,11 +320,23 @@ delay(1000);
 void scheduler() {
   unsigned long time;
   TCB* current = head;
+
+  if(deploy || retract) {
+    head = solarPanel;
+    tail = keypad;
+  } else if(measure){
+    head = image;
+    tail = image;
+  } else {
+    head = power;
+    tail = vehicle;
+  }
+
   while (current != NULL) {
+    time = millis();
     current->myTask(current->taskData);
     current = current->next;
     WarningAlarm((void*)task4);
-    time = millis();
     while(millis() - time < 1000){
 
     }
@@ -390,7 +405,7 @@ void consoleDisplay(void *task) {
 void WarningAlarm(void *task) {
   warningAlarmData *task4 = (warningAlarmData *)task;
  tft.setCursor(0, 0);
- tft.setTextSize(1);
+ tft.setTextSize(2);
  
  if(*task4->batLevel <= 10) {
    if(batcount >= 2){
@@ -498,29 +513,29 @@ void vehicleComms(void* task) {
   vehicleCommsData* task5 = (vehicleCommsData*) task;
   int press = 0;
   timeMillis = millis();
-  while (millis() - timeMillis < 2000) {
+  while (millis() - timeMillis < 1000) {
 
   }
   Serial.println();
   press = Serial.read();
 
   if(inputCheck(press)) {
-    Serial.println(press);
+    Serial1.println(press);
     Serial.println("Command Response Sent");
   } else {
     Serial.print("Error: Invalid Input \n");
   }
 
   timeMillis = millis();
-  while (millis() - timeMillis < 2000) {
+  while (millis() - timeMillis < 1000) {
 
   }
   press = Serial.read();
   if(press == 116 || press == 100)
     if(press == 116) {
-      Serial.println("k");
+      Serial1.println("k");
     } else {
-      Serial.println("c");
+      Serial1.println("c");
     }
 }
 
@@ -533,56 +548,63 @@ After the message has been interpreted and verified as correct or an outgoing me
 been built and forwarded to the SatelliteComms task, the Command task shall be deleted.
 */
 
-void commandManagement(void* task) {
-  commandManagementData *task0 = (commandManagementData *)task;
-
-  int press = *task0->msg;
+void commandManagement(int press) {
   int error = 0;
-  if(press == 115) {
+  Serial.println(press);
+  if(press == 115) { //S
     measure = 1;
   } 
   // Stop measurement data collection tasks
-  else if(press == 112) {
+  else if(press == 112) { //P
     measure = 0;
   } 
   // Display console
-  else if(press == 100) {
-    if(measure) {
-      measure = 0;
+  else if(press == 100) { //D
+    if(display) {
+      display = 0;
+      tft.fillScreen(BLACK);
     } else {
-      measure = 1;
+      display = 1;
     }
   } 
   // Thruster
-  else if(press == 116) {
+  else if(press == 116) { //T
     thrust = 1; //basically calls satelliteComs function
   } 
   // Most recent vals
-  else if(press == 109) {
+  else if(press == 109) { //M
     // I'm assuming it means recent imageData
-    tft.print("IMAGE DATA: \t");
-    tft.println(imageData);        
-  } else {
+    Serial.print("IMAGE DATA: \t");
+    Serial.println(imageData);        
+  } else{
     error = 1;
   }
+
   if(error) {
-    tft.println("E");
-    tft.println("Command Not Found");
+    Serial.println("E");
+    Serial.println("Command Not Found");
   } else {
-    tft.println("A");
-    tft.println("Command Recieved");
+    Serial.println("A");
+    Serial.println("Command Recieved");
   }
-  
+  Serial.println(measure);
+  Serial.println(thrust);
+  Serial.println(display);
 }
 
 void satelliteComs(void *task) {
   satelliteComsData *task2 = (satelliteComsData *)task;
   timeMillis = millis();
-  while (millis() - timeMillis < 1500 && Serial.read() == 0) {
+  Serial.println("command");
+  while (millis() - timeMillis < 1000) {
 
   }
   *task2->msg = Serial.read(); 
-  RxTx->myTask(RxTx->taskData);
+  Serial.println(*task2->msg);
+  if(*task2->msg > 0) {
+    RxTx->myTask(*task2->msg); 
+  }
+
   if(thrust) {
     *task2->thrusterCommand = (unsigned int)randomInteger(-10, 10);
     thrust = 0;
@@ -593,9 +615,12 @@ void satelliteComs(void *task) {
 }
 
 void satDisplay(){
+  tft.setCursor(0,80);
+  tft.setTextSize(1);
+  tft.setTextColor(WHITE);
   tft.print("SATELLITE: \t");
   tft.println("15 Hundred Shades of C");
-  tft.println("DATE: \t");
+  tft.print("DATE: \t");
   tft.println("12/10/2018");
   tft.print("OPERATOR: \t");
   tft.println("ABCDE");
@@ -647,6 +672,7 @@ void satDisplay(){
 }
 
 void start() {
+  tft.fillScreen(BLACK);
   head = power;
   power->next = thruster;
   thruster->next = satellite;
